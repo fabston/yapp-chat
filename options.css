@@ -1,0 +1,498 @@
+/* Settings page layout. Tokens and components: sc-theme.css. */
+
+body {
+  font-size: 14px;
+}
+
+/* Sidebar + sections (tabs along the top on narrow windows). */
+.settings {
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr);
+  gap: 32px;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 28px 24px 80px;
+}
+
+.nav {
+  position: sticky;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-self: start;
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 0 8px;
+}
+
+.nav-brand h1 {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.nav-brand .muted {
+  font-size: 12px;
+}
+
+.nav a {
+  position: relative; /* above the marker */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+}
+
+.nav a:hover {
+  color: var(--text);
+  background: var(--hover);
+}
+
+.nav a[aria-current] {
+  color: var(--text);
+}
+
+/* Behind the current link, sliding to the next (options.js markSection). */
+.nav-marker {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+}
+
+.nav-marker.ready {
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), width 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), height 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.nav a .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.nav a[aria-current] .icon {
+  color: var(--accent);
+}
+
+.content {
+  min-width: 0;
+}
+
+.panel {
+  padding-bottom: 28px;
+  scroll-margin-top: 24px;
+}
+
+.panel + .panel {
+  padding-top: 28px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.panel h3 {
+  margin-top: 20px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Appearance: the settings, and beside them a preview that stays in view. */
+.appearance {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+  gap: 20px;
+  align-items: start;
+}
+
+.preview {
+  position: sticky;
+  top: 24px;
+  margin-top: 12px;
+}
+
+.preview-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.preview-pane {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.preview-pane .pane-list {
+  overflow: visible;
+}
+
+.preview-pane .name {
+  cursor: default;
+}
+
+/* "Your sign-in is from before some features": what's missing, and Sign in again. */
+.callout {
+  margin-top: 14px;
+  padding: 12px 14px;
+  font-size: 13px;
+  background: var(--warn-soft);
+  border: 1px solid var(--warn-line);
+  border-radius: var(--radius-sm);
+}
+
+.callout p {
+  margin-top: 4px;
+  color: var(--muted);
+}
+
+.callout ul {
+  margin: 6px 0 10px;
+  padding-left: 18px;
+}
+
+/* About → Shortcuts. */
+.shortcuts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 16px;
+  margin: 10px 0 0;
+  font-size: 13px;
+}
+
+.shortcuts dt {
+  white-space: nowrap;
+}
+
+.shortcuts dd {
+  margin: 0;
+  color: var(--muted);
+}
+
+kbd {
+  display: inline-block;
+  min-width: 20px;
+  padding: 1px 6px;
+  font: 600 11px/1.5 var(--font);
+  text-align: center;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+}
+
+@media (max-width: 760px) {
+  .settings {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding-top: 0;
+  }
+
+  .nav {
+    top: 0;
+    z-index: 10;
+    flex-direction: row;
+    margin: 0 -24px;
+    padding: 10px 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .nav-brand {
+    display: none;
+  }
+
+  .nav a {
+    flex-shrink: 0;
+  }
+
+  .appearance {
+    grid-template-columns: 1fr;
+  }
+}
+
+section h2 {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.card-desc {
+  margin-top: 6px;
+  color: var(--muted);
+}
+
+.card.nested {
+  margin-top: 12px;
+}
+
+code {
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.add-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.add-row .input {
+  flex: 1;
+}
+
+/* One click with Yapp Chat's own app. */
+.quick-sign-in {
+  margin-top: 14px;
+}
+
+/* Under both: where sign-ins go. */
+.accounts-note {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* "Sign in with …" in the platform's own colours and logo, as people know them. */
+.btn-provider {
+  gap: 8px;
+  font-weight: 600;
+}
+
+.btn-provider .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.btn-provider.twitch {
+  color: #fff;
+  background: #9146ff;
+  border-color: #9146ff;
+}
+
+.btn-provider.kick {
+  color: #0b0e0f;
+  background: #53fc18;
+  border-color: #53fc18;
+}
+
+.btn-provider:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+/* A sign-in on its way (options.js setBusy): a spinner and what's happening, at full strength (not greyed out). */
+.btn.busy {
+  gap: 8px;
+  opacity: 1;
+  cursor: progress;
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+/* Signed in: your account fades in where the button was. */
+.account:not([hidden]) {
+  animation: account-in 0.35s ease-out;
+}
+
+@keyframes account-in {
+  from {
+    opacity: 0;
+    translate: 0 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2s;
+  }
+
+  .account:not([hidden]) {
+    animation: none;
+  }
+}
+
+/* Backup: export and import side by side. */
+.backup-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.item-list {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.item-list:empty {
+  display: none;
+}
+
+.item-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 6px 6px 12px;
+  font-family: var(--mono);
+  font-size: 13px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* An empty list says so (options.js renderList). */
+.item-list li.none {
+  font-family: inherit;
+  color: var(--muted);
+}
+
+.item-list li:last-child {
+  border-bottom: none;
+}
+
+.account {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+/* Accounts: Twitch and Kick, each in a card of its own. */
+.account-card {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.account-card .account,
+.account-card .quick-sign-in {
+  margin-top: 0;
+}
+
+/* Who you're signed in as: your picture with the platform's badge on its corner, as in the chats. */
+.account-who {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.account-pic {
+  --badge: 16px;
+  width: 40px;
+  height: 40px;
+}
+
+.account-who strong {
+  display: block;
+  overflow: hidden;
+  font-size: 15px;
+  text-overflow: ellipsis;
+}
+
+.account-sub {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.setting-row.static {
+  cursor: default;
+}
+
+.segmented {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 2px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.segmented button {
+  padding: 4px 10px;
+  font: 500 12px/1.4 var(--font);
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.segmented button[aria-pressed="true"] {
+  color: var(--text);
+  background: var(--surface-3);
+}
+
+.inline-icon {
+  width: 14px;
+  height: 14px;
+  vertical-align: -2px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* A setting that needs something first (live notifications: the Twitch sign-in). */
+button.setting-row:disabled {
+  cursor: not-allowed;
+}
+
+button.setting-row:disabled:hover {
+  background: transparent;
+}
+
+button.setting-row:disabled .switch {
+  opacity: 0.45;
+}
+
+/* About: where to get help, and the site. */
+.about-links {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  color: var(--muted);
+}
+
+.about-links li + li {
+  margin-top: 4px;
+}
+
+.about-links a {
+  color: var(--link);
+}

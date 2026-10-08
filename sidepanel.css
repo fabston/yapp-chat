@@ -1,0 +1,84 @@
+/* Side panel layout. Chat panes: chat.css; tokens: sc-theme.css. */
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+.sp-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 6px 6px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.brand-logo {
+  flex-shrink: 0;
+}
+
+.sp-open {
+  flex: 1;
+  min-width: 0;
+}
+
+.sp-open .input {
+  padding: 5px 9px;
+  font-size: 12px;
+}
+
+/* "Following this tab" / "Pinned · Follow tab". */
+.sp-mode {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 6px 2px 10px;
+  font-size: 11px;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.sp-pinned {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.sp-pinned .icon {
+  width: 12px;
+  height: 12px;
+}
+
+.sp-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.sp-main > .pane {
+  flex: 1;
+}
+
+.empty {
+  margin: auto;
+  padding: 24px;
+  max-width: 280px;
+  font-size: 13px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.empty strong {
+  color: var(--text);
+}
+
+.empty p + p {
+  margin-top: 6px;
+}

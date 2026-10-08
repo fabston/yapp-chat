@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Yapp Chat</title>
+  <link rel="stylesheet" href="sc-theme.css">
+  <link rel="stylesheet" href="chat.css">
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <header class="sp-head">
+    <img class="brand-logo" src="icons/icon32.png" alt="" width="24" height="24">
+    <form class="sp-open" id="openForm" novalidate>
+      <input type="text" id="openInput" class="input" placeholder="Channel, @handle or link (comma: merge)" autocomplete="off"
+        spellcheck="false" aria-label="Open a chat: Twitch channel, kick:name, YouTube @handle or a stream link">
+    </form>
+    <button type="button" class="btn btn-ghost btn-sm btn-icon" id="windowBtn" title="Open the chat window (several chats side by side)"
+      aria-label="Open the chat window"><svg class="icon" aria-hidden="true"><use href="#i-columns"/></svg></button>
+    <button type="button" class="btn btn-ghost btn-sm btn-icon" id="settingsBtn" title="Settings" aria-label="Settings">
+      <svg class="icon" aria-hidden="true"><use href="#i-sliders"/></svg></button>
+  </header>
+  <p class="sp-mode" id="modeLine" hidden></p>
+  <main class="sp-main" id="paneHost">
+    <div class="empty" id="emptyState">
+      <p><strong>No stream here</strong></p>
+      <p>Open a Twitch or Kick channel or a YouTube live stream in this tab, or type a channel above.</p>
+    </div>
+  </main>
+  <script type="module" src="sidepanel.js"></script>
+</body>
+</html>

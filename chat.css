@@ -1,0 +1,2136 @@
+/* Chat panes (lib/chat.js), shared by the side panel and the chat window. Tokens: sc-theme.css. */
+
+:root {
+  --chat-size: 15px;
+  --twitch: #a970ff;
+  --youtube: #ff4e45;
+  --kick: #53fc18;
+  --first: #c832c8; /* someone's first message in a channel */
+  --first-soft: rgba(200, 50, 200, 0.1);
+  --friend: #ffca28; /* friends' gold: their stripe and star */
+}
+
+/* Kick's green and the friends' gold are too light to read on white; the magenta a touch darker, for the label. */
+:root[data-theme="light"] {
+  --kick: #1f9c00;
+  --first: #b42db4;
+  --first-soft: rgba(200, 50, 200, 0.08);
+  --friend: #b07d00;
+}
+
+.pane {
+  position: relative;
+  container: pane / inline-size; /* narrow panes trim the header (see the end of this file) */
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--bg);
+}
+
+.pane-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 4px 4px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* The channels in this chat (lib/chat.js renderHead). */
+.pane-feeds {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  min-width: 0;
+}
+
+.feed-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* The platform before a chat's name: a tile in its colour, the same size for each (lib/ui.js platformTile).
+   A touch below the middle of the line, where lowercase names have their middle. */
+.platform-tile {
+  position: relative;
+  top: 0.08em;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: #fff;
+}
+
+.platform-tile.twitch rect {
+  fill: #9146ff;
+}
+
+.platform-tile.kick {
+  color: #0b0e0f;
+}
+
+.platform-tile.kick rect {
+  fill: #53fc18;
+}
+
+.platform-tile.youtube rect {
+  fill: #ff0033;
+}
+
+/* Several channels: their pictures, names and total viewers on one line; click for the panel. */
+.feed-stack {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+  margin-left: -4px;
+  padding: 3px 8px 3px 4px;
+  font: inherit;
+  color: var(--text);
+  background: none;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.feed-stack:hover,
+.feed-stack[aria-expanded="true"] {
+  background: var(--surface-2);
+}
+
+.stack-pics {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.stack-pic + .stack-pic {
+  margin-left: -7px;
+}
+
+.stack-chevron {
+  width: 14px;
+  height: 14px;
+  color: var(--muted);
+}
+
+/* The panel under the header: one row per channel. */
+.feeds-pop {
+  position: absolute;
+  top: 44px;
+  left: 8px;
+  z-index: 6;
+  display: grid;
+  gap: 2px;
+  width: min(340px, calc(100% - 16px));
+  padding: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 32px var(--shadow);
+}
+
+.pop-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 4px 4px 6px;
+  border-radius: var(--radius-sm);
+}
+
+.pop-row:hover {
+  background: var(--surface-3);
+}
+
+.pop-row .btn:hover:not(:disabled) {
+  background: var(--border-strong);
+}
+
+.pop-info {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pop-name {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A channel's picture, with a small Twitch / YouTube badge on its corner. */
+.source-pic {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.source-avatar {
+  flex-shrink: 0;
+  object-fit: cover;
+  background: var(--surface-3);
+  border-radius: 50%;
+}
+
+.source-pic .source-avatar {
+  width: 100%;
+  height: 100%;
+  box-shadow: 0 0 0 2px var(--bg);
+}
+
+/* A solid circle in the platform's colour with a white mark, ringed off from the picture. */
+.platform-badge {
+  --ring: var(--bg);
+  position: absolute;
+  z-index: 1; /* above the next picture in the header's overlapping row */
+  right: -2px;
+  bottom: -2px;
+  display: grid;
+  place-items: center;
+  width: var(--badge, 12px);
+  height: var(--badge, 12px);
+  color: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.platform-badge .icon {
+  width: 66%;
+  height: 66%;
+}
+
+.platform-badge.twitch {
+  background: #9146ff;
+}
+
+.platform-badge.youtube {
+  background: #ff0033;
+}
+
+/* Kick's own colours: a black mark on its green. */
+.platform-badge.kick {
+  color: #0b0e0f;
+  background: #53fc18;
+}
+
+/* The triangle's path is already drawn balanced on its centre of mass (its box sits right of centre). */
+.platform-badge.youtube .icon {
+  width: 58%;
+  height: 58%;
+}
+
+.stack-pic {
+  --badge: 11px;
+  width: 24px;
+  height: 24px;
+}
+
+.pop-pic {
+  --badge: 14px;
+  width: 32px;
+  height: 32px;
+}
+
+/* On the panel's lighter background. */
+.feeds-pop .source-pic .source-avatar {
+  box-shadow: 0 0 0 2px var(--surface-2);
+}
+
+.feeds-pop .platform-badge {
+  --ring: var(--surface-2);
+}
+
+.feeds-pop .pop-row:hover .platform-badge,
+.feeds-pop .pop-row:hover .source-avatar {
+  box-shadow: 0 0 0 2px var(--surface-3);
+}
+
+/* At the start of each line in a merged chat. */
+.msg-source {
+  --badge: 10px;
+  width: 20px;
+  height: 20px;
+  margin-right: 6px;
+  vertical-align: -5px;
+}
+
+.pane-title {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Live for 2h 14m · 26.5K watching. */
+.pane-live {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* The red "live" dot. */
+.pane-live:not(.offline)::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  margin-right: -3px;
+  background: #eb0400;
+  border-radius: 50%;
+}
+
+.pane-live .viewers {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.pane-live .icon {
+  width: 12px;
+  height: 12px;
+}
+
+/* Banned from this chat (reading as a guest). */
+.pane-flag {
+  flex-shrink: 0;
+  padding: 1px 7px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--danger);
+  background: var(--danger-soft);
+  border: 1px solid var(--danger-line);
+  border-radius: 999px;
+}
+
+.pane-status {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 11px;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pane-status[data-tone="warn"] {
+  color: var(--warn);
+}
+
+.pane-actions {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.pane-filter {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.pane-list {
+  font-family: var(--chat-font, var(--font)); /* Settings → Font */
+  flex: 1;
+  min-height: 0;
+  padding: 4px 0 8px;
+  overflow-y: auto;
+  font-size: var(--chat-size);
+  line-height: 1.5;
+  overscroll-behavior: contain;
+  /* Hidden while following the chat; shows once you scroll up to read back. */
+  scrollbar-color: transparent transparent;
+}
+
+.pane-list.scrolled-up {
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+/* ---- Messages ---- */
+
+.msg {
+  position: relative; /* for its buttons (.msg-actions) */
+  padding: 2px 10px;
+  overflow-wrap: anywhere;
+  border-left: 2px solid transparent;
+}
+
+/* The buttons on the message under the pointer, on its top edge (lib/chat.js showActions). */
+.msg-actions {
+  position: absolute;
+  z-index: 2;
+  top: -13px;
+  right: 8px;
+  display: flex;
+  gap: 1px;
+  padding: 2px;
+  font-size: 13px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  user-select: none;
+}
+
+.msg-actions.inside {
+  top: 2px;
+}
+
+.msg-actions .btn-icon {
+  padding: 4px;
+}
+
+.msg-actions .btn-icon:hover {
+  background: var(--surface-3);
+}
+
+.msg-actions .i-trash {
+  color: var(--danger);
+}
+
+.msg:hover {
+  background: var(--hover);
+}
+
+/* Your name or one of your highlight words. */
+.msg.hl {
+  background: var(--warn-soft);
+  border-left-color: var(--warn);
+}
+
+/* First message from this user in the channel (Twitch): tinted, the stripe, and "First message" above it. */
+.msg.first {
+  background: var(--first-soft);
+  border-left-color: var(--first);
+}
+
+.first-line {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8em;
+  font-weight: 700;
+  color: var(--first);
+}
+
+.first-line .icon {
+  width: 1.1em;
+  height: 1.1em;
+}
+
+/* Subs, gifts, raids, announcements, Super Chats, memberships: tinted in their colour (lib/chat.js renderNotice). */
+.msg.notice {
+  --notice: var(--twitch);
+  margin: 3px 0;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  background: color-mix(in srgb, var(--notice) 9%, transparent);
+  border-left: 3px solid var(--notice);
+}
+
+.notice-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-size: 0.9em;
+}
+
+/* With their own message below it. */
+.notice-head:not(:last-child) {
+  margin-bottom: 4px;
+}
+
+.notice-icon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  color: #fff;
+  background: var(--notice);
+  border-radius: 50%;
+}
+
+.notice-icon .icon {
+  width: 12px;
+  height: 12px;
+}
+
+/* Super Chat yellow needs dark text. */
+.msg[data-event="superchat"] .notice-icon {
+  color: #1a1300;
+}
+
+.notice-title {
+  min-width: 0;
+}
+
+.notice-pill {
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 18px;
+  color: color-mix(in srgb, var(--notice) 65%, var(--text));
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--notice) 18%, transparent);
+  border-radius: 999px;
+}
+
+.msg.system {
+  color: var(--muted);
+}
+
+.system-line {
+  display: block;
+  font-size: 0.85em;
+  color: var(--muted);
+}
+
+.msg.notice .system-line {
+  color: var(--label);
+}
+
+.msg.deleted .body {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+
+/* Hover to read it plainly. */
+.msg.deleted:hover .body {
+  opacity: 0.85;
+  text-decoration: none;
+}
+
+.msg.action .body {
+  font-style: italic;
+}
+
+.ts {
+  margin-right: 6px;
+  font: 0.75em var(--mono);
+  color: var(--muted);
+}
+
+.badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-right: 4px;
+  /* Centred on the name: a fixed offset from the baseline would put letter
+     pills (whose baseline is their own text) lower than image badges, and
+     "middle" alone centres on the lowercase letters, a little low. */
+  position: relative;
+  top: -0.1em;
+  vertical-align: middle;
+}
+
+.badges:empty {
+  display: none;
+}
+
+.badge {
+  width: 18px;
+  height: 18px;
+}
+
+.badge-pill {
+  display: inline-grid;
+  place-items: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  font: 700 10px/1 var(--font);
+  color: #fff;
+  background: var(--surface-3);
+  border-radius: 3px;
+}
+
+.badge-pill[data-kind="broadcaster"],
+.badge-pill[data-kind="owner"] {
+  background: #e91916;
+}
+
+.badge-pill[data-kind="moderator"] {
+  background: #00a35c;
+}
+
+.badge-pill[data-kind="vip"] {
+  background: #e005b9;
+}
+
+.badge-pill[data-kind="subscriber"],
+.badge-pill[data-kind="founder"],
+.badge-pill[data-kind="member"] {
+  background: #8205b4;
+}
+
+.badge-pill[data-kind="partner"],
+.badge-pill[data-kind="verified"] {
+  background: #5c16c5;
+}
+
+.name {
+  padding: 0;
+  font-family: inherit;
+  font-size: 1em;
+  font-weight: 700;
+  line-height: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.name:hover {
+  text-decoration: underline;
+}
+
+.sep {
+  color: var(--muted);
+}
+
+/* Above a reply: a connector up from the message, then "@name their message" (lib/chat.js renderReply). */
+.reply-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 0.8em;
+  color: var(--muted);
+}
+
+.reply-line::before {
+  content: "";
+  flex-shrink: 0;
+  align-self: flex-end;
+  width: 16px;
+  height: 0.75em;
+  margin-left: 7px;
+  border-top: 2px solid var(--border-strong);
+  border-left: 2px solid var(--border-strong);
+  border-top-left-radius: 6px;
+}
+
+.reply-to {
+  flex-shrink: 0;
+  font-weight: 700;
+}
+
+.reply-body {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The message it answers is still in the chat: click to go to it. */
+.reply-line.can-jump {
+  cursor: pointer;
+}
+
+.reply-line.can-jump:hover .reply-body {
+  color: var(--text);
+}
+
+.msg.flash {
+  animation: flash 1.4s ease-out;
+}
+
+@keyframes flash {
+  from {
+    background: var(--accent-soft);
+  }
+}
+
+.mention {
+  font-weight: 600;
+}
+
+.link {
+  color: var(--link);
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+/* Emotes sit on the text line; zero-width ones are drawn over the one before. */
+.emote-stack {
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.emote {
+  display: block;
+  height: calc(var(--chat-size) * var(--emote-scale, 2.1)); /* Settings → Emote size */
+  margin: -4px 0;
+}
+
+.emote.zero-width {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+}
+
+/* Instant tooltip for emotes and badges (lib/chat.js showTip), fixed to the window. */
+.hover-tip {
+  position: fixed;
+  z-index: 20;
+  display: flex;
+  gap: 12px;
+  max-width: calc(100vw - 16px);
+  padding: 10px 12px;
+  pointer-events: none;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 32px var(--shadow);
+}
+
+.tip-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  text-align: center;
+}
+
+.tip-preview {
+  margin-bottom: 6px;
+}
+
+.tip-preview.round {
+  border-radius: 50%;
+}
+
+img.tip-preview {
+  height: 56px;
+  max-width: 168px;
+  object-fit: contain;
+}
+
+.hover-tip[data-kind="badge"] img.tip-preview {
+  height: 36px;
+}
+
+.badge-pill.tip-preview {
+  min-width: 30px;
+  height: 30px;
+  padding: 0 6px;
+  font-size: 15px;
+  border-radius: 6px;
+}
+
+.tip-item strong {
+  max-width: 168px;
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The full message a reply answers. */
+.hover-tip[data-kind="reply"] {
+  flex-direction: column;
+  gap: 4px;
+  max-width: min(380px, calc(100vw - 16px));
+}
+
+.tip-reply {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.tip-reply .emote {
+  height: 28px;
+}
+
+/* A YouTube video or Twitch clip, from a link. */
+.hover-tip[data-kind="link"] {
+  flex-direction: column;
+  gap: 8px;
+  width: min(300px, calc(100vw - 16px));
+}
+
+.tip-thumb {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  background: var(--surface-3);
+  border-radius: var(--radius-sm);
+}
+
+.tip-link {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.tip-source {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* Right-click menu on a message (lib/chat.js showMenu). */
+.context-menu {
+  position: fixed;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  padding: 4px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 32px var(--shadow);
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  font: 13px var(--font);
+  color: var(--text);
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.menu-item.danger {
+  color: var(--danger);
+}
+
+.menu-sep {
+  margin: 4px 6px;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+.menu-item:hover,
+.menu-item:focus-visible {
+  background: var(--surface-3);
+  outline: none;
+}
+
+/* ---- Below the list ---- */
+
+.pane-body {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* "↓ 8 new messages": scrolled up (or held under the pointer) while chat goes on. */
+.pane-more {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap; /* one line, also in a narrow pane */
+  gap: 4px;
+  padding: 5px 12px 5px 9px;
+  font: 500 12px var(--font);
+  color: var(--text);
+  background: var(--floating);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  box-shadow: 0 6px 20px var(--shadow);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  transform: translateX(-50%);
+  animation: more-in 0.18s ease-out;
+}
+
+.pane-more:hover {
+  background: var(--surface-3);
+  border-color: var(--accent-line);
+}
+
+.pane-more .icon {
+  width: 14px;
+  height: 14px;
+  color: var(--accent);
+}
+
+.pane-more .count {
+  margin-left: 2px;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes more-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 6px);
+  }
+}
+
+.pane-input {
+  position: relative;
+  padding: 6px 8px 8px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.pane-input:has(.link-btn) {
+  text-align: center;
+}
+
+/* Several Twitch channels here: pick which one you're writing to. */
+.input-row {
+  display: flex;
+  gap: 6px;
+}
+
+.input-row .input {
+  min-width: 0;
+}
+
+/* Several Twitch channels here: the box shows the one you're writing to as a
+   picture before the text (lib/chat.js renderInput); click it for the others. */
+.input-row.compose {
+  align-items: center;
+  gap: 0;
+  padding-left: 5px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.input-row.compose:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.input-row.compose .input,
+.input-row.compose .input:focus {
+  padding-left: 6px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.target-btn {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 1px;
+  padding: 2px;
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.target-btn:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.target-btn .icon {
+  width: 12px;
+  height: 12px;
+}
+
+.target-avatar {
+  width: 22px;
+  height: 22px;
+}
+
+.menu-avatar {
+  width: 20px;
+  height: 20px;
+}
+
+/* Slow mode countdown, at the end of the message box row. */
+.cooldown {
+  align-self: center;
+  flex-shrink: 0;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--warn);
+  white-space: nowrap;
+  background: var(--warn-soft);
+  border-radius: 999px;
+}
+
+.cooldown.nudge {
+  animation: nudge 0.3s;
+}
+
+@keyframes nudge {
+  25%,
+  75% {
+    transform: translateX(-3px);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+}
+
+/* "Replying to @name ✕" above the message box. */
+.reply-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  padding: 6px 4px 6px 10px;
+  background: var(--surface-2);
+  border-left: 3px solid var(--border-strong); /* the person's colour, set in lib/chat.js */
+  border-radius: var(--radius-sm);
+}
+
+.reply-chip-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.reply-chip-head {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* The start of the message you're answering, on one line. */
+.reply-chip-body {
+  overflow: hidden;
+  font-size: 13px;
+  color: var(--text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reply-chip-body .emote-stack {
+  vertical-align: -5px;
+}
+
+.reply-chip-body .emote {
+  height: 20px;
+  margin: 0;
+}
+
+.reply-chip .btn:hover:not(:disabled) {
+  background: var(--surface-3);
+}
+
+/* Emote suggestions while typing ":name" (lib/chat.js buildSuggest). */
+.suggest {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 8px;
+  width: min(380px, calc(100% - 16px));
+  z-index: 6;
+  max-height: 264px;
+  padding: 4px;
+  overflow-y: auto;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 32px var(--shadow);
+}
+
+.suggest-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.suggest-row[aria-selected="true"] {
+  background: var(--surface-3);
+}
+
+.suggest-row img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.suggest-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.suggest-at {
+  width: 28px;
+  font-weight: 700;
+  color: var(--muted);
+  text-align: center;
+}
+
+.suggest-source {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.input-note {
+  padding: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.link-btn {
+  padding: 4px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.link-btn:hover {
+  text-decoration: underline;
+}
+
+/* ---- User card (lib/card.js) ---- */
+
+.usercard {
+  position: absolute;
+  left: 8px; /* set next to the name you clicked (lib/card.js placeCard) */
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  width: min(420px, calc(100% - 16px));
+  max-height: calc(100% - 16px);
+  overflow: hidden;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px var(--shadow);
+}
+
+/* Their Twitch banner, or a wash of their name colour. */
+.card-banner {
+  position: relative;
+  flex-shrink: 0;
+  height: 64px;
+  background: linear-gradient(120deg, color-mix(in srgb, var(--user-color) 45%, transparent), color-mix(in srgb, var(--user-color) 8%, transparent)) center / cover no-repeat;
+}
+
+.card-tools {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2; /* above the picture's row, which overlaps the banner (else it takes their lower edge's clicks) */
+  display: flex;
+  gap: 4px;
+}
+
+.card-tools .btn {
+  color: #fff;
+  background: rgba(13, 17, 23, 0.6);
+  backdrop-filter: blur(6px);
+}
+
+.card-tools .btn:hover:not(:disabled) {
+  background: rgba(13, 17, 23, 0.85);
+}
+
+.card-tools .friend-btn.on {
+  color: #ffca28;
+}
+
+.card-tools .i-twitch {
+  color: #bf94ff;
+}
+
+.card-tools .i-youtube {
+  color: #ff4e45;
+}
+.card-tools .i-kick {
+  color: #53fc18;
+}
+
+/* The picture overlaps the banner; name, badges and channel sit below it. */
+.card-head {
+  position: relative;
+  margin-top: -34px;
+  padding: 0 14px;
+}
+
+.card-avatar-frame {
+  display: block;
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  overflow: hidden;
+  background: var(--surface-3);
+  border: 4px solid var(--surface-2);
+  border-radius: 50%;
+}
+
+/* Fades in (settling from a touch larger) once loaded; until then the frame is an empty circle. */
+.card-avatar {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transform: scale(1.08);
+  transition: opacity 0.3s ease-out, transform 0.4s ease-out;
+}
+
+.card-avatar-frame.loaded .card-avatar {
+  opacity: 1;
+  transform: none;
+}
+
+/* Their picture, big, while you point at it (lib/card.js zoomPicture). */
+.card-avatar-big {
+  position: fixed;
+  z-index: 10;
+  object-fit: cover;
+  background: var(--surface-3);
+  border: 4px solid var(--surface-2);
+  border-radius: 16px;
+  box-shadow: 0 16px 40px var(--shadow);
+  pointer-events: none; /* the pointer stays on the small one under it */
+  transform-origin: top left;
+  animation: card-zoom 0.12s ease-out;
+}
+
+@keyframes card-zoom {
+  from {
+    opacity: 0;
+    transform: scale(0.35);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-avatar-big {
+    animation: none;
+  }
+}
+
+.card-who {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  margin-top: 10px;
+}
+
+/* "Previously [xqcow 2017–2022] [+3 more]": earlier names, from the log servers, one chip each. */
+.card-names {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.card-name-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 1px 8px;
+  font: inherit;
+  color: var(--muted);
+  background: var(--surface-3);
+  border: none;
+  border-radius: 999px;
+}
+
+.card-name-chip strong {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.card-name-when {
+  font-size: 11px;
+}
+
+.card-names-more {
+  cursor: pointer;
+}
+
+.card-names-more:hover {
+  color: var(--text);
+}
+
+.card-name-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  min-width: 0;
+}
+
+.card-name {
+  overflow: hidden;
+  font-size: 17px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-role {
+  padding: 1px 7px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--label);
+  background: rgba(169, 112, 255, 0.15);
+  border-radius: 999px;
+}
+
+/* Partner: Twitch's verified check instead of the word. */
+.card-role.is-verified {
+  display: inline-flex;
+  padding: 0;
+  color: #9146ff;
+  background: none;
+}
+
+/* Kick's verified check is green. */
+.card-role.is-verified.kick {
+  color: var(--kick);
+}
+
+.card-role.is-verified .icon {
+  width: 20px;
+  height: 20px;
+}
+
+.card-name-row .badges {
+  top: 0;
+  margin: 0;
+  vertical-align: 0;
+}
+
+/* Merged chat: which channel they're chatting in. */
+.card-in {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.card-in-pic {
+  --badge: 9px;
+  width: 16px;
+  height: 16px;
+}
+
+.card-in-pic .source-avatar,
+.card-in-pic .platform-badge {
+  box-shadow: 0 0 0 2px var(--surface-2);
+}
+
+.card-bio {
+  display: -webkit-box;
+  margin: 10px 14px 0;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.card-note-input {
+  display: block;
+  width: auto;
+  min-height: 30px;
+  margin: 10px 14px 0;
+  padding: 5px 9px;
+  font-size: 12px;
+  resize: vertical;
+}
+
+/* Followers, joined, live, subscribed: one short line each, two per row. */
+.card-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 6px 14px;
+  margin: 10px 14px 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* The same order whichever arrives first: followers, joined; sub, following; live now. */
+.card-stat.stat-user {
+  order: 1;
+}
+
+.card-stat.stat-calendar {
+  order: 2;
+}
+
+.card-stat.stat-star {
+  order: 3;
+}
+
+.card-stat.stat-heart {
+  order: 4;
+}
+
+.card-stat.stat-radio {
+  order: 5;
+}
+
+.card-stats:empty {
+  display: none;
+}
+
+.card-stat {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-stat .icon {
+  width: 14px;
+  height: 14px;
+  margin-right: 7px;
+  vertical-align: -2px;
+}
+
+.card-stat strong {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.stat-star .icon {
+  color: var(--label);
+}
+
+/* A new account or follow (lib/card.js sinceRow): a mod's first hint at a throwaway account. */
+.card-stat.fresh .icon,
+.card-stat.fresh strong {
+  color: var(--warn);
+}
+
+.card-stat.is-live .icon {
+  color: #eb0400;
+}
+
+/* Their recent messages: scrolls on its own, so the card never needs to. */
+.card-recent {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  margin-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.card-section {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.card-count {
+  flex-shrink: 0;
+  padding: 0 6px;
+  font-size: 10px;
+  white-space: nowrap;
+  color: var(--text);
+  letter-spacing: 0;
+  background: var(--surface-3);
+  border-radius: 999px;
+}
+
+.card-messages {
+  flex: 1 1 auto;
+  min-height: 48px;
+  max-height: 240px;
+  padding: 0 14px 6px;
+  overflow-y: auto;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+/* Off-screen rows skip layout (thousands of lines from the logs). */
+.card-message {
+  padding: 3px 0;
+  overflow-wrap: anywhere;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 24px;
+}
+
+/* One line: the log server, or what's loading; the whole text on hover when it's cut short. */
+.card-note {
+  min-width: 0;
+  margin-left: auto;
+  overflow: hidden;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-overflow: ellipsis;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+/* Above their messages: what's loaded from the logs, and buttons for earlier months. */
+.card-earlier {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 14px 6px;
+  padding: 6px 6px 6px 10px;
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.card-earlier-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.card-earlier-actions {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+/* Their timeouts and bans, as chips that filter the list. */
+.card-offenses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 2px 14px 6px;
+}
+
+.offense-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  padding: 3px 10px;
+  font: 12px var(--font);
+  color: var(--danger);
+  background: var(--danger-soft);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.offense-chip:hover,
+.offense-chip[aria-pressed="true"] {
+  border-color: var(--danger-line);
+}
+
+.offense-chip .icon {
+  width: 13px;
+  height: 13px;
+}
+
+.offense-last {
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-search {
+  flex-shrink: 0;
+  width: auto;
+  margin: 2px 14px 6px;
+  padding: 5px 9px;
+  font-size: 12px;
+}
+
+/* Day headings, staying at the top while you scroll that day. */
+.card-day {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 6px 0 3px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--surface-2);
+}
+
+.card-timeout {
+  color: var(--danger);
+}
+
+.card-timeout .icon,
+.card-event .icon {
+  width: 13px;
+  height: 13px;
+  margin-right: 5px;
+  vertical-align: -2px;
+}
+
+.card-event {
+  margin-right: 6px;
+  font-weight: 600;
+}
+
+.card-message .emote {
+  height: 24px;
+  margin: -2px 0;
+}
+
+.card-empty {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.card-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 6px;
+  padding: 10px 14px 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.card-action {
+  flex: 1;
+}
+
+.card-mod {
+  padding-top: 0;
+  border-top: none;
+}
+
+.card-action.danger {
+  color: var(--danger);
+  border-color: var(--danger-line);
+}
+
+/* ---- Channel suggestions under "add a channel" boxes (lib/channel-suggest.js) ---- */
+
+.channel-suggest {
+  position: fixed;
+  z-index: 40;
+  max-height: 360px;
+  padding: 4px;
+  overflow-y: auto;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 32px var(--shadow);
+}
+
+.cs-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.cs-row[aria-selected="true"] {
+  background: var(--surface-3);
+}
+
+.cs-pic {
+  --badge: 12px;
+  width: 28px;
+  height: 28px;
+}
+
+.cs-pic .cs-avatar {
+  box-shadow: none;
+}
+
+.cs-pic .platform-badge {
+  --ring: var(--surface-2);
+}
+
+.cs-row[aria-selected="true"] .platform-badge {
+  --ring: var(--surface-3);
+}
+
+.cs-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.cs-name {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cs-follow {
+  margin-left: 6px;
+  padding: 0 6px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--label);
+  vertical-align: 1px;
+  background: rgba(169, 112, 255, 0.15);
+  border-radius: 999px;
+}
+
+.cs-game {
+  overflow: hidden;
+  font-size: 11px;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Live: a red dot and viewers. */
+.cs-live {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.cs-live::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  background: #eb0400;
+  border-radius: 50%;
+}
+
+.cs-offline {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.cs-note {
+  padding: 6px 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ---- Modes, cheers, history ---- */
+
+/* Slow, followers-only, sub-only… as one small group of icons (lib/chat.js renderModes). */
+.pane-modes {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 7px;
+  padding: 0 7px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 18px;
+  color: var(--warn);
+  white-space: nowrap;
+  background: var(--warn-soft);
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}
+
+.mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  cursor: default;
+}
+
+.mode .icon {
+  width: 11px;
+  height: 11px;
+}
+
+/* The tooltip for a mode: what it means. */
+.hover-tip[data-kind="mode"] {
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+}
+
+.pop-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+/* "Cheer100": the cheermote, then the amount in its tier colour. */
+.cheer-amount {
+  margin: 0 4px 0 2px;
+  font-weight: 700;
+}
+
+/* Said before you opened the chat (recent messages). */
+.msg.history {
+  opacity: 0.6;
+}
+
+.msg.history:hover {
+  opacity: 1;
+}
+
+/* Narrow panes (the side panel): keep the channel name readable (its own
+   width, up to half the header); the uptime and the modes' values go (hover a mode for it). */
+.feed-chip .pane-title {
+  flex-shrink: 0;
+  max-width: 50%;
+}
+
+@container pane (max-width: 440px) {
+  .feed-chip .mode-value {
+    display: none;
+  }
+
+  .feed-chip .pane-modes {
+    gap: 5px;
+  }
+}
+
+/* The live time ("2h 5m") stays in a side panel of usual width; only a very narrow pane drops it. */
+@container pane (max-width: 340px) {
+  .feed-chip .uptime {
+    display: none;
+  }
+}
+
+/* ---- Emote picker (lib/chat.js toggleEmotePicker) ---- */
+
+.picker-btn {
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.emote-picker {
+  position: absolute;
+  right: 8px; /* by the ☺ button */
+  bottom: calc(100% + 4px);
+  width: min(380px, calc(100% - 16px));
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  max-height: min(340px, 60vh);
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 32px var(--shadow);
+}
+
+.picker-search {
+  flex-shrink: 0;
+  width: auto;
+  margin: 8px 8px 4px;
+}
+
+.picker-body {
+  flex: 1;
+  min-height: 0;
+  padding: 0 8px 4px;
+  overflow-y: auto;
+}
+
+.picker-title {
+  position: sticky;
+  top: 0;
+  margin: 0;
+  padding: 8px 2px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--surface-2);
+}
+
+.picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
+  gap: 2px;
+}
+
+.picker-emote {
+  display: grid;
+  place-items: center;
+  height: 34px;
+  padding: 1px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.picker-emote:hover,
+.picker-emote:focus-visible {
+  background: var(--surface-3);
+  outline: none;
+}
+
+/* Starred (right-click in the picker): a gold tint, and a star outlined to show on any emote. */
+.picker-emote.fav {
+  position: relative;
+  background: rgba(255, 202, 40, 0.14);
+}
+
+.picker-emote.fav::after {
+  content: "★";
+  position: absolute;
+  top: -1px;
+  right: 0;
+  font-size: 12px;
+  line-height: 1;
+  color: #ffca28;
+  text-shadow: 0 0 2px #000, 0 0 1px #000;
+}
+
+.picker-emote img {
+  max-width: 100%;
+  max-height: 32px;
+  object-fit: contain;
+}
+
+/* One line, the same height empty or not (the picker grows upwards: a taller line would move it). */
+.picker-hovered {
+  flex-shrink: 0;
+  min-height: 28px;
+  padding: 6px 12px;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 15px; /* with the padding and border: the 28px, empty or not */
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.picker-empty {
+  padding: 12px 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ---- Folded repeats, row shading ---- */
+
+/* "×12": the same message sent again (lib/chat.js fold). */
+.fold-count {
+  margin-left: 6px;
+  padding: 0 6px;
+  font-size: 0.75em;
+  font-weight: 700;
+  color: var(--text);
+  vertical-align: 1px;
+  background: var(--surface-3);
+  border-radius: 999px;
+}
+
+/* A repeated timeout: beside the pills, spaced like them. */
+.notice-head .fold-count {
+  margin-left: 0;
+}
+
+/* Settings → Shade every other line. */
+.alt-rows .pane-list > .msg:nth-child(even of :not([hidden])):not(.hl, .notice, .first, .friend) {
+  background: var(--hover);
+}
+
+/* ---- Mentions inbox (lib/mentions.js) ---- */
+
+.mentions-btn {
+  position: relative;
+}
+
+.mentions-count {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  min-width: 16px;
+  padding: 0 4px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  color: #1a1300;
+  text-align: center;
+  background: var(--warn);
+  border-radius: 999px;
+}
+
+.mentions-pop {
+  position: fixed;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  width: min(340px, calc(100vw - 16px));
+  max-height: min(460px, 70vh);
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 32px var(--shadow);
+}
+
+.mentions-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.mentions-list {
+  flex: 1;
+  min-height: 0;
+  padding: 4px;
+  overflow-y: auto;
+}
+
+.mention-row {
+  display: block;
+  width: 100%;
+  padding: 7px 8px;
+  font: inherit;
+  color: var(--text);
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.mention-row:hover {
+  background: var(--surface-3);
+}
+
+.mention-top {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.mention-where {
+  overflow: hidden;
+  font-size: 11px;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mention-text {
+  margin-top: 2px;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.mentions-empty {
+  padding: 12px 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ---- Settings → Lines: Compact ---- */
+
+/* Tighter lines, smaller emotes: more fits, nothing overlaps the lines around it. */
+[data-density="compact"] .pane-list {
+  padding-top: 2px;
+  line-height: 1.38;
+}
+
+[data-density="compact"] .msg {
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+[data-density="compact"] .msg.notice {
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+
+[data-density="compact"] .emote {
+  height: calc(var(--chat-size) * var(--emote-scale, 2.1) * 0.8);
+  margin: -2px 0;
+}
+
+/* ---- Friends, "new since you left" ---- */
+
+.msg.friend {
+  background: rgba(255, 202, 40, 0.07);
+  border-left-color: var(--friend);
+}
+
+.friend-star {
+  width: 13px;
+  height: 13px;
+  margin-right: 3px;
+  color: var(--friend);
+  vertical-align: -1px;
+}
+
+/* 7TV name paints: the gradient or image shows through the letters. */
+.name.painted {
+  color: transparent !important;
+  background-clip: text;
+  -webkit-background-clip: text;
+  background-size: cover;
+}
+
+.unread-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--danger);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.unread-line::before,
+.unread-line::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--danger-line);
+}
+
+/* When exactly a message was sent (over a name or timestamp). */
+.hover-tip[data-kind="time"] {
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+}

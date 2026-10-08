@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Yapp Chat</title>
+  <link rel="stylesheet" href="sc-theme.css">
+  <link rel="stylesheet" href="chat.css">
+  <link rel="stylesheet" href="chat-window.css">
+</head>
+<body>
+  <header class="cw-head">
+    <img class="brand-logo" src="icons/icon32.png" alt="" width="24" height="24">
+    <h1>Yapp Chat</h1>
+    <form class="cw-add" id="addForm" novalidate>
+      <input type="text" id="addInput" class="input" placeholder="Add a chat: Twitch channel, kick:name, YouTube @handle or link (several, comma-separated, merge into one)"
+        autocomplete="off" spellcheck="false" aria-label="Add a chat">
+      <button type="submit" class="btn btn-primary btn-sm">
+        <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>Add
+      </button>
+    </form>
+    <button type="button" class="btn btn-ghost btn-sm btn-icon" id="settingsBtn" title="Settings" aria-label="Settings">
+      <svg class="icon" aria-hidden="true"><use href="#i-sliders"/></svg></button>
+  </header>
+  <main class="cw-splits" id="splits">
+    <div class="empty" id="emptyState">
+      <p><strong>No chats yet</strong></p>
+      <p>Add a Twitch channel (<code>xqc</code>), a YouTube channel (<code>@lofigirl</code>) or paste a stream link. They sit side by side here.</p>
+      <p>Several in one go (<code>xqc, @xqcyt, kick:xqc</code>) merge into one chat, each message marked with its channel. The <strong>+</strong> on a chat adds more.</p>
+    </div>
+  </main>
+  <script type="module" src="chat-window.js"></script>
+</body>
+</html>

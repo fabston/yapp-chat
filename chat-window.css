@@ -1,0 +1,78 @@
+/* Chat window: chats side by side. Panes: chat.css; tokens: sc-theme.css. */
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+.cw-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px 8px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.cw-head h1 {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cw-add {
+  display: flex;
+  flex: 1;
+  gap: 6px;
+  max-width: 520px;
+  margin-left: 8px;
+}
+
+.cw-add .input {
+  padding: 5px 9px;
+  font-size: 12px;
+}
+
+/* Columns share the width; below ~300px each, the row scrolls sideways. */
+.cw-splits {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow-x: auto;
+}
+
+.cw-splits > .pane {
+  flex: 1 0 300px;
+  border-right: 1px solid var(--border);
+}
+
+.cw-splits > .pane:last-child {
+  border-right: none;
+}
+
+.empty {
+  margin: auto;
+  padding: 24px;
+  max-width: 360px;
+  font-size: 13px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.empty strong {
+  color: var(--text);
+}
+
+.empty p + p {
+  margin-top: 6px;
+}
+
+.empty code {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text);
+}

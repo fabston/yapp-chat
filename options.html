@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Settings · Yapp Chat</title>
+  <link rel="stylesheet" href="sc-theme.css">
+  <link rel="stylesheet" href="chat.css">
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="settings">
+    <!-- Sections, always in view (tabs along the top on narrow windows). -->
+    <nav class="nav" aria-label="Settings sections">
+      <div class="nav-brand">
+        <img src="icons/icon48.png" alt="" width="32" height="32">
+        <div>
+          <h1>Yapp Chat</h1>
+          <span class="muted" id="versionTag"></span>
+        </div>
+      </div>
+      <a href="#accounts" data-icon="user">Accounts</a>
+      <a href="#chat" data-icon="columns">Chat</a>
+      <a href="#appearance" data-icon="sliders">Appearance</a>
+      <a href="#highlights" data-icon="at">Highlights</a>
+      <a href="#notifications" data-icon="bell">Notifications</a>
+      <a href="#people" data-icon="users">People</a>
+      <a href="#emotes" data-icon="smile">Emotes</a>
+      <a href="#privacy" data-icon="shield">Privacy &amp; data</a>
+      <a href="#about" data-icon="star">About</a>
+    </nav>
+
+    <main class="content">
+      <section class="panel" id="accounts" aria-labelledby="accounts-h">
+        <h2 id="accounts-h">Accounts</h2>
+        <p class="card-desc">Reading chat needs no account. Sign in to send messages and use mod tools; on Twitch also your emotes, badge images and live notifications.</p>
+        <!-- Signed in to Twitch with an older sign-in: what's missing, and one click to fix it. -->
+        <div class="callout" id="scopeHealth" hidden></div>
+        <div class="account-card">
+        <div id="signedIn" class="account" hidden>
+          <div class="account-who">
+            <span class="source-pic account-pic" id="accountPic"><img class="source-avatar" alt=""></span>
+            <div><strong id="accountName"></strong><span class="account-sub">Signed in to Twitch</span></div>
+          </div>
+          <button type="button" class="btn" id="signOutBtn">Sign out</button>
+        </div>
+
+        <div id="signedOut">
+          <!-- Yapp Chat's own Twitch app (lib/apps.js), through yapp.chat's token service: one click. -->
+          <div class="quick-sign-in">
+            <button type="button" class="btn btn-provider twitch" data-icon="twitch" id="twitchQuickBtn">Sign in with Twitch</button>
+          </div>
+        </div>
+        <p class="status-msg" id="accountStatus" role="status"></p>
+        </div>
+
+        <div class="account-card" id="kickAccount">
+        <div id="kickSignedIn" class="account" hidden>
+          <div class="account-who">
+            <span class="source-pic account-pic" id="kickPic"><img class="source-avatar" alt=""></span>
+            <div><strong id="kickName"></strong><span class="account-sub">Signed in to Kick</span></div>
+          </div>
+          <button type="button" class="btn" id="kickSignOutBtn">Sign out</button>
+        </div>
+
+        <div id="kickSignedOut">
+          <!-- Yapp Chat's own Kick app (lib/apps.js), through yapp.chat's token service: one click. -->
+          <div class="quick-sign-in">
+            <button type="button" class="btn btn-provider kick" data-icon="kick" id="kickQuickBtn">Sign in with Kick</button>
+          </div>
+        </div>
+        <p class="status-msg" id="kickStatus" role="status"></p>
+        </div>
+        <!-- Both platforms hand out sign-ins only with the app's secret, which the token service adds: the policy says more. -->
+        <p class="accounts-note">Sign-ins pass through yapp.chat, which keeps nothing.</p>
+      </section>
+
+      <section class="panel" id="chat" aria-labelledby="chat-h">
+        <h2 id="chat-h">Chat</h2>
+        <p class="card-desc">How chats open and behave.</p>
+        <div class="card nested">
+  <button type="button" class="setting-row" id="autoOpenRow" role="switch" aria-checked="false">
+            <span class="setting-text"><span class="setting-title">Open on live streams</span>
+              <span class="setting-desc">The side panel opens when you first click a live Twitch, Kick or YouTube stream.</span></span>
+            <span class="switch" aria-hidden="true"></span>
+          </button>
+  <button type="button" class="setting-row" id="recentRow" role="switch" aria-checked="false">
+            <span class="setting-text"><span class="setting-title">Show recent messages</span>
+              <span class="setting-desc">A chat opens with its last messages instead of empty.</span></span>
+            <span class="switch" aria-hidden="true"></span>
+          </button>
+  <button type="button" class="setting-row" id="foldRow" role="switch" aria-checked="false">
+            <span class="setting-text"><span class="setting-title">Fold repeated messages</span>
+              <span class="setting-desc">The same message within a minute adds "×2" to the first.</span></span>
+            <span class="switch" aria-hidden="true"></span>
+          </button>
+  <button type="button" class="setting-row" id="cardLogsRow" role="switch" aria-checked="false">
+            <span class="setting-text"><span class="setting-title">Chat logs in user cards</span>
+              <span class="setting-desc">Someone's earlier messages in the channel, from public chat logs.</span></span>
+            <span class="switch" aria-hidden="true"></span>
+          </button>
+        </div>
+      </section>
+
+      <section class="panel" id="appearance" aria-labelledby="appearance-h">
+        <h2 id="appearance-h">Appearance</h2>
+        <p class="card-desc">Changes show right away in the preview and in open chats.</p>
+        <div class="appearance">
+          <div class="card nested">
+    <div class="setting-row static">
+              <span class="setting-text"><span class="setting-title">Theme</span></span>
+              <div class="segmented" id="themeChoices" role="group" aria-label="Theme"></div>
+            </div>
+    <div class="setting-row static">
+              <span class="setting-text"><span class="setting-title">Lines</span></span>
+              <div class="segmented" id="densityChoices" role="group" aria-label="Lines"></div>
+            </div>
+    <div class="setting-row static">
+              <span class="setting-text"><span class="setting-title">Font</span></span>
+              <div class="segmented" id="fontChoices" role="group" aria-label="Font"></div>
+            </div>
+    <div class="setting-row static">
+              <span class="setting-text"><span class="setting-title">Text size</span></span>
+              <div class="segmented" id="sizeChoices" role="group" aria-label="Text size"></div>
+            </div>
+    <div class="setting-row static">
+              <span class="setting-text"><span class="setting-title">Emote size</span></span>
+              <div class="segmented" id="emoteSizeChoices" role="group" aria-label="Emote size"></div>
+            </div>
+    <button type="button" class="setting-row" id="timestampsRow" role="switch" aria-checked="false">
+              <span class="setting-text"><span class="setting-title">Show times</span></span>
+              <span class="switch" aria-hidden="true"></span>
+            </button>
+    <button type="button" class="setting-row" id="badgesRow" role="switch" aria-checked="false">
+              <span class="setting-text"><span class="setting-title">Show badges</span>
+                <span class="setting-desc">Broadcaster, moderator, subscriber and so on.</span></span>
+              <span class="switch" aria-hidden="true"></span>
+            </button>
+    <button type="button" class="setting-row" id="cosmeticsRow" role="switch" aria-checked="false">
+              <span class="setting-text"><span class="setting-title">Cosmetics</span>
+                <span class="setting-desc">7TV name paints and 7TV, BetterTTV and FrankerFaceZ badges.</span></span>
+              <span class="switch" aria-hidden="true"></span>
+            </button>
+    <button type="button" class="setting-row" id="altRowsRow" role="switch" aria-checked="false">
+              <span class="setting-text"><span class="setting-title">Shade every other line</span>
+                <span class="setting-desc">Easier to follow a busy chat.</span></span>
+              <span class="switch" aria-hidden="true"></span>
+            </button>
+          </div>
+          <!-- A small chat drawn with the settings above (options.js renderPreview). -->
+          <div class="preview" role="group" aria-label="Preview">
+            <span class="preview-label">Preview</span>
+            <div class="pane preview-pane"><div class="pane-list" id="preview"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="highlights" aria-labelledby="highlights-h">
+        <h2 id="highlights-h">Highlights</h2>
+        <p class="card-desc">Messages that mention you or one of your words stand out, and go to the 🔔 mentions inbox.</p>
+        <div class="card nested">
+          <button type="button" class="setting-row" id="highlightNameRow" role="switch" aria-checked="false">
+            <span class="setting-text"><span class="setting-title">Highlight my name</span>
+              <span class="setting-desc">Your Twitch or Kick name, when you're signed in.</span></span>
+            <span class="switch" aria-hidden="true"></span>
+          </button>
+        </div>
+        <h3>Words</h3>
+        <p class="card-desc">Whole words or phrases, in any case.</p>
+        <form class="add-row" id="wordForm" novalidate>
+          <label class="visually-hidden" for="wordInput">Highlight word</label>
+          <input type="text" id="wordInput" class="input" placeholder="a word or phrase" autocomplete="off">
+          <button type="submit" class="btn btn-primary">
+            <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>Add
+          </button>
+        </form>
+        <ul class="item-list" id="wordList"></ul>
+      </section>
+
+      <section class="panel" id="notifications" aria-labelledby="notifications-h">
+        <h2 id="notifications-h">Notifications</h2>
+        <div class="card nested">
+          <button type="button" class="setting-row" id="liveNotifyRow" role="switch" aria-checked="false">
+            <span class="setting-text"><span class="setting-title">Notify when channels I follow go live</span>
+              <span class="setting-desc" id="liveNotifyDesc"></span></span>
+            <span class="switch" aria-hidden="true"></span>
+          </button>
+        </div>
+      </section>
+
+      <section class="panel" id="people" aria-labelledby="people-h">
+        <h2 id="people-h">People</h2>
+        <h3>Friends</h3>
+        <p class="card-desc">Their messages stand out in every chat. Add someone here, with ☆ in their user card, or from a message's ⋯ menu.</p>
+        <form class="add-row" id="friendForm" novalidate>
+          <label class="visually-hidden" for="friendInput">Name to add as a friend</label>
+          <input type="text" id="friendInput" class="input" placeholder="a name" autocomplete="off" spellcheck="false">
+          <button type="submit" class="btn btn-primary">
+            <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>Add
+          </button>
+        </form>
+        <ul class="item-list" id="friendList"></ul>
+        <h3>Hidden</h3>
+        <div class="card nested">
+  <button type="button" class="setting-row" id="hideCommandsRow" role="switch" aria-checked="false">
+            <span class="setting-text"><span class="setting-title">Hide !commands</span>
+              <span class="setting-desc">Messages starting with "!" (for chat bots).</span></span>
+            <span class="switch" aria-hidden="true"></span>
+          </button>
+  <button type="button" class="setting-row" id="hideBotsRow" role="switch" aria-checked="false">
+            <span class="setting-text"><span class="setting-title">Hide common bots</span>
+              <span class="setting-desc" id="botNames"></span></span>
+            <span class="switch" aria-hidden="true"></span>
+          </button>
+        </div>
+        <p class="card-desc">People you hid (⋯ on a message → <em>Hide messages from them</em>):</p>
+        <form class="add-row" id="hideForm" novalidate>
+          <label class="visually-hidden" for="hideInput">Twitch, Kick or YouTube name to hide</label>
+          <input type="text" id="hideInput" class="input" placeholder="a name" autocomplete="off" spellcheck="false">
+          <button type="submit" class="btn btn-primary">
+            <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>Hide
+          </button>
+        </form>
+        <ul class="item-list" id="hiddenList"></ul>
+      </section>
+
+      <section class="panel" id="emotes" aria-labelledby="emotes-h">
+        <h2 id="emotes-h">Emotes</h2>
+        <p class="card-desc">Twitch's and Kick's own emotes always show; these add the emote sets channels use. Right-click an emote in the picker to ★ it.</p>
+        <div class="card nested" id="emoteRows"></div>
+      </section>
+
+      <section class="panel" id="privacy" aria-labelledby="privacy-h">
+        <h2 id="privacy-h">Privacy &amp; data</h2>
+        <p class="card-desc">No ads, no analytics, nothing collected. Yapp Chat talks only to Twitch, Kick and YouTube, the emote services, the public recent-messages and chat log services, and yapp.chat for signing in with Yapp Chat's apps, and only to show your chats. What each one is for: <a href="https://yapp.chat/privacy" target="_blank" rel="noopener noreferrer">the privacy policy</a>.</p>
+        <h3>Kept by Yapp Chat</h3>
+        <div class="card nested" id="dataRows"></div>
+        <h3>Backup</h3>
+        <p class="card-desc">With browser sync on, your settings and notes follow your browser profile. For another browser, save them to a file and load it there (sign-ins aren't included).</p>
+        <div class="backup-row">
+          <button type="button" class="btn" id="exportBtn">Export to a file</button>
+          <button type="button" class="btn" id="importBtn">Import from a file</button>
+          <input type="file" id="importFile" accept=".json,application/json" hidden>
+        </div>
+        <p class="status-msg" id="backupStatus" role="status"></p>
+      </section>
+
+      <section class="panel" id="about" aria-labelledby="about-h">
+        <h2 id="about-h">About</h2>
+        <p class="card-desc">Click the toolbar icon to open chat beside the stream you're watching. The <svg class="icon inline-icon" aria-hidden="true"><use href="#i-columns"/></svg> button opens a window with several chats side by side.</p>
+        <h3>Shortcuts</h3>
+        <dl class="shortcuts">
+          <dt><kbd>Ctrl</kbd>/<kbd>⌘</kbd> <kbd>F</kbd></dt><dd>Filter the chat you're in</dd>
+          <dt><kbd>Ctrl</kbd>/<kbd>⌘</kbd> <kbd>E</kbd></dt><dd>Emote picker (Enter picks the first match of a search)</dd>
+          <dt><kbd>Esc</kbd></dt><dd>Back to the newest messages; close a card or menu</dd>
+          <dt><kbd>Alt</kbd> <kbd>←</kbd> <kbd>→</kbd></dt><dd>Move between columns in the chat window</dd>
+          <dt><kbd>:</kbd>lul</dt><dd>Suggest emotes</dd>
+          <dt><kbd>@</kbd>na</dt><dd>Suggest people chatting here</dd>
+          <dt><kbd>Tab</kbd></dt><dd>Complete a name from a few letters</dd>
+          <dt><kbd>↑</kbd> <kbd>↓</kbd></dt><dd>Go through what you sent (in an empty message box)</dd>
+          <dt>Right-click</dt><dd>On a message (or ⋯ on its buttons): reply, mention, hide, friends, mod tools. On an emote in the picker: ★ it</dd>
+        </dl>
+        <h3>Help and links</h3>
+        <ul class="about-links">
+          <li><a href="https://yapp.chat/discord" target="_blank" rel="noopener noreferrer">Discord</a>: questions, bugs and ideas</li>
+          <li><a href="https://yapp.chat" target="_blank" rel="noopener noreferrer">yapp.chat</a>: the website</li>
+          <li><a href="https://yapp.chat/github" target="_blank" rel="noopener noreferrer">GitHub</a>: the source code (open source, MIT)</li>
+          <li><a href="https://yapp.chat/privacy" target="_blank" rel="noopener noreferrer">Privacy policy</a></li>
+        </ul>
+        <p class="card-desc" id="aboutVersion"></p>
+      </section>
+    </main>
+  </div>
+  <script type="module" src="options.js"></script>
+</body>
+</html>

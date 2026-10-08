@@ -1,0 +1,367 @@
+/*
+ * Yapp Chat — design tokens and components. The accent is the duck's yellow
+ * (as on yapp.chat), for "on" and the primary action; orange (the beak) is for
+ * highlights and warnings, so the two never mean the same.
+ */
+
+:root {
+  color-scheme: dark;
+
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface-2: #1c2128;
+  --surface-3: #262c34;
+  --border: #30363d;
+  --border-strong: #3d444d;
+  --border-subtle: #21262d;
+
+  --text: #e6edf3;
+  --muted: #9da7b3; /* ≥ 4.5:1 on --bg and --surface */
+  --switch-knob: #c9d1d9; /* an "off" switch's knob */
+
+  --accent: #ffd23f; /* text, rings, lines */
+  --accent-fill: #ffd23f; /* buttons, switches and checkboxes that are on */
+  --accent-hover: #ffdf73; /* a filled one, pointed at */
+  --accent-soft: rgba(255, 210, 63, 0.12);
+  --accent-line: rgba(255, 210, 63, 0.4);
+  --on-accent: #111111;
+
+  --warn: #ff9a1f;
+  --warn-soft: rgba(255, 154, 31, 0.12);
+  --warn-line: rgba(255, 154, 31, 0.4);
+
+  --danger: #ff7b72;
+  --danger-soft: rgba(255, 123, 114, 0.1);
+  --danger-line: rgba(255, 123, 114, 0.45);
+
+  --radius: 10px;
+  --radius-sm: 6px;
+
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+
+  --hover: rgba(255, 255, 255, 0.03);
+  --link: #58a6ff;
+  --label: #d2b8ff; /* purple text: roles, notices */
+  --floating: rgba(28, 33, 40, 0.9);
+  --shadow: rgba(0, 0, 0, 0.55);
+}
+
+/* Settings → Theme: Light (or System on a light system). */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --bg: #ffffff;
+  --surface: #f6f8fa;
+  --surface-2: #f3f4f6;
+  --surface-3: #e5e8ec;
+  --border: #d0d7de;
+  --border-strong: #b6bec8;
+  --border-subtle: #e6e9ed;
+
+  --text: #1f2328;
+  --muted: #59636e;
+  --switch-knob: #fff; /* white, clear on the light track */
+
+  /* Yellow can't be text or a ring on white: a dark gold for those, the yellow for fills. */
+  --accent: #8a6400;
+  --accent-fill: #ffd23f;
+  --accent-hover: #ffc61a;
+  --accent-soft: rgba(255, 196, 0, 0.18);
+  --accent-line: rgba(138, 100, 0, 0.35);
+  --on-accent: #111111;
+
+  --warn: #b45309;
+  --warn-soft: rgba(255, 154, 31, 0.14);
+  --warn-line: rgba(180, 83, 9, 0.4);
+
+  --danger: #cf222e;
+  --danger-soft: rgba(207, 34, 46, 0.08);
+  --danger-line: rgba(207, 34, 46, 0.4);
+
+  --hover: rgba(31, 35, 40, 0.04);
+  --link: #0969da;
+  --label: #6f3fd1;
+  --floating: rgba(255, 255, 255, 0.94);
+  --shadow: rgba(31, 35, 40, 0.18);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Thin scrollbars on a transparent track (scrollbar-color is inherited). */
+* {
+  scrollbar-width: thin;
+}
+
+:root {
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+body {
+  margin: 0;
+  font: 13px/1.5 var(--font);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* Sprite icons are line icons (fill set here, not on the <symbol>). */
+svg:has(> use) {
+  fill: none;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ---- Buttons ---- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-shrink: 0; /* layouts opt in to shrinking */
+  padding: 7px 12px;
+  font: 500 12px/1.3 var(--font);
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--surface-3);
+  border-color: var(--border-strong);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  color: var(--on-accent);
+  background: var(--accent-fill);
+  border-color: var(--accent-fill);
+  font-weight: 600;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.btn-ghost {
+  color: var(--muted);
+  background: transparent;
+  border-color: transparent;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--surface-2);
+  border-color: transparent;
+}
+
+.btn-sm {
+  padding: 5px 9px;
+}
+
+.btn-icon {
+  padding: 6px;
+}
+
+/* ---- Switch ---- */
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+  padding: 0;
+  background: var(--border-strong);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: var(--switch-knob);
+  border-radius: 50%;
+  transition: transform 0.15s, background-color 0.15s;
+}
+
+.switch[aria-checked="true"],
+[aria-checked="true"] > .switch {
+  background: var(--accent-fill);
+}
+
+.switch[aria-checked="true"]::after,
+[aria-checked="true"] > .switch::after {
+  transform: translateX(16px);
+  background: var(--on-accent);
+}
+
+/* ---- Cards and setting rows ---- */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.setting-row:last-child {
+  border-bottom: none;
+}
+
+.card > .setting-row:first-child {
+  border-top-left-radius: var(--radius);
+  border-top-right-radius: var(--radius);
+}
+
+.card > .setting-row:last-child {
+  border-bottom-left-radius: var(--radius);
+  border-bottom-right-radius: var(--radius);
+}
+
+button.setting-row {
+  cursor: pointer;
+}
+
+button.setting-row:hover {
+  background: var(--hover);
+}
+
+.setting-row > svg {
+  color: var(--muted);
+}
+
+.setting-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.setting-title {
+  display: block;
+  font-weight: 500;
+}
+
+.setting-desc {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ---- Inputs ---- */
+
+.input {
+  width: 100%;
+  min-width: 0;
+  padding: 7px 10px;
+  font: 13px/1.4 var(--font);
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.input::placeholder {
+  color: var(--muted); /* 4.5:1+ on --bg, in both themes */
+}
+
+.input:focus,
+.input:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* Yellow on white is faint (about 1.4:1): a dark-gold edge so "on" still stands out in the light theme. */
+:root[data-theme="light"] .switch[aria-checked="true"],
+:root[data-theme="light"] [aria-checked="true"] > .switch {
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+/* ---- Status messages ---- */
+
+.status-msg {
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.status-msg:empty {
+  display: none;
+}
+
+.status-msg.ok {
+  color: var(--accent);
+}
+
+.status-msg.err {
+  color: var(--danger);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+  }
+}

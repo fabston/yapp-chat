@@ -1,0 +1,15 @@
+/* A popped-out chat (popout.html): one pane filling the window. Pane styles: chat.css. */
+
+html,
+body {
+  height: 100%;
+}
+
+.po-main {
+  display: flex;
+  height: 100%;
+}
+
+.po-main > .pane {
+  flex: 1;
+}
