@@ -1114,6 +1114,14 @@ img.tip-preview {
   text-decoration: underline;
 }
 
+/* "Write on YouTube": opens elsewhere. */
+.link-btn .icon {
+  width: 12px;
+  height: 12px;
+  margin-left: 4px;
+  vertical-align: -1px;
+}
+
 /* ---- User card (lib/card.js) ---- */
 
 .usercard {
@@ -1129,6 +1137,12 @@ img.tip-preview {
   border: 1px solid var(--border-strong);
   border-radius: 14px;
   box-shadow: 0 16px 40px var(--shadow);
+}
+
+/* In a short chat only their messages give way (.card-recent); everything above keeps its height, not squeezed
+   into the next part. */
+.usercard > * {
+  flex-shrink: 0;
 }
 
 /* Their Twitch banner, or a wash of their name colour. */

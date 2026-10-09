@@ -3,7 +3,7 @@
 **Twitch, Kick and YouTube live chat, side by side with the stream.**  
 A free, open-source Chrome and Brave extension. No account needed, no tracking.
 
-🌐 [yapp.chat](https://yapp.chat)  ·  💬 [Discord](https://yapp.chat/discord)  ·  ⭐ [GitHub](https://yapp.chat/github)  ·  🔒 [Privacy](https://yapp.chat/privacy)
+🧩 [Chrome Web Store](https://chromewebstore.google.com/detail/yapp-chat/ocebmcgmildjdidagnnifoegheabnpgd)  ·  🌐 [yapp.chat](https://yapp.chat)  ·  💬 [Discord](https://yapp.chat/discord)  ·  ⭐ [GitHub](https://yapp.chat/github)  ·  🔒 [Privacy](https://yapp.chat/privacy)
 
 ---
 
@@ -25,7 +25,7 @@ A free, open-source Chrome and Brave extension. No account needed, no tracking.
 
 ## 🚀 Install
 
-**From the Chrome Web Store:** coming soon. Watch [yapp.chat](https://yapp.chat) for the link.
+**From the Chrome Web Store:** [Yapp Chat on the Chrome Web Store](https://chromewebstore.google.com/detail/yapp-chat/ocebmcgmildjdidagnnifoegheabnpgd). One click, and it works in Brave too.
 
 **From this folder (developer mode):**
 
@@ -83,9 +83,17 @@ Plain JavaScript modules: no framework, no build step, no dependencies.
 
 No build step: the files here are exactly what the browser runs.
 
+## 📜 What's new
+
+Every version's changes are in [CHANGELOG.md](CHANGELOG.md).
+
 ## 💬 Help and ideas
 
 Found a bug or have an idea? Open an issue on [GitHub](https://yapp.chat/github) or come say hi in our [Discord](https://yapp.chat/discord). It helps to mention your browser version and the channel or stream link. Pull requests welcome!
+
+## ⭐ Like it?
+
+If Yapp Chat makes your chat a little calmer, give it a star on GitHub. It helps other viewers and streamers find it. 🦆
 
 ---
 
