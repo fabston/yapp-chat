@@ -1,6 +1,7 @@
 /*
  * A chat in its own window (the pop-out button on a chat). Which chat is in
- * the address: popout.html?chat=<list of sources as JSON>.
+ * the address: popout.html?chat=<list of sources as JSON>, and &message=<id> to
+ * go to a message (a mention's notification).
  */
 
 import { ChatContext, ChatPane } from './lib/chat.js';
@@ -25,7 +26,7 @@ if (!chat) {
 } else {
   const ctx = await ChatContext.create();
   setTitle(chat);
-  new ChatPane(document.getElementById('paneHost'), chat, ctx, {
+  const pane = new ChatPane(document.getElementById('paneHost'), chat, ctx, {
     popOut: false,
     // Channels added or removed: the address follows, so a reload shows the same chat.
     onChange: (next) => {
@@ -33,6 +34,8 @@ if (!chat) {
       setTitle(next);
     },
   });
+  const message = new URLSearchParams(location.search).get('message');
+  if (message) pane.reveal(message);
 
   // Signing in or out changes the Twitch connection: start over. Other settings apply to new messages.
   chrome.storage.onChanged.addListener(async (changes, area) => {

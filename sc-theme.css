@@ -396,6 +396,66 @@ button.setting-row:hover {
   border-color: var(--danger-line);
 }
 
+/* ---- Checkbox (lib/ui.js checkbox): the real input, drawn as a box that fills with the accent ---- */
+
+.check {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.45;
+  cursor: pointer;
+}
+
+.check input {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  /* Level with the middle of the label's first line, however tall it is. */
+  margin: calc((1lh - 18px) / 2) 0 0;
+  background: var(--bg);
+  border: 1.5px solid var(--border-strong);
+  border-radius: 5px;
+  cursor: pointer;
+  appearance: none;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+/* The tick: drawn by a mask, in the colour that reads on the accent. */
+.check input::after {
+  width: 12px;
+  height: 12px;
+  content: "";
+  background: var(--on-accent);
+  opacity: 0;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.check input:checked {
+  background: var(--accent-fill);
+  border-color: var(--accent-fill);
+}
+
+.check input:checked::after {
+  opacity: 1;
+}
+
+.check:hover input:not(:checked) {
+  border-color: var(--accent);
+}
+
+.check input:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .check input {
+    transition: none;
+  }
+}
+
 /* A dropdown (lib/ui.js dropdown): a button like an input, opening a list like the chat's menus. */
 .dropdown {
   display: flex;

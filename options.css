@@ -117,23 +117,38 @@ body {
 .preview {
   position: sticky;
   top: 24px;
-  margin-top: 12px;
+  margin-top: 12px; /* level with the settings' card */
 }
 
+/* Its name in a small header, as a chat's. */
 .preview-label {
   display: block;
-  margin-bottom: 6px;
+  padding: 8px 12px;
   font-size: 11px;
   font-weight: 700;
   color: var(--muted);
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .preview-pane {
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: var(--radius);
+}
+
+/* Appearance's choices: one width, so their edges line up; the buttons share it by their words. */
+.appearance .segmented {
+  width: 17.5em;
+}
+
+.appearance .segmented button {
+  flex: 1 1 auto;
+}
+
+.appearance .setting-row.static .setting-title {
+  white-space: nowrap;
 }
 
 .preview-pane .pane-list {
@@ -165,21 +180,76 @@ body {
 }
 
 /* About → Shortcuts. */
-.shortcuts {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 8px 16px;
-  margin: 10px 0 0;
-  font-size: 13px;
+/* About's shortcuts: what it does, its keys on the right (as a setting's control). */
+.group-label + .card.nested {
+  margin-top: 0;
 }
 
-.shortcuts dt {
-  white-space: nowrap;
+.setting-row.shortcut {
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 
-.shortcuts dd {
-  margin: 0;
+/* A folded group of them: its rows right under the summary, as a card's. */
+.shortcut-fold {
+  margin-top: 14px;
+}
+
+.shortcut-fold > .setting-row:last-child {
+  border-bottom: none;
+}
+
+.shortcut .setting-title {
+  font-weight: 400;
+}
+
+.keys {
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 4px;
+}
+
+/* Something typed, not a key: ":lul", "@na". */
+.typed {
+  padding: 1px 6px;
+  color: var(--text);
+  background: var(--surface-3);
+  border-radius: 4px;
+}
+
+/* The search's keys, at its right end (out of the way of the ✕ that clears a search). */
+.search-keys {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  display: flex;
+  gap: 4px;
+  translate: 0 -50%;
+  pointer-events: none;
+}
+
+.search-keys kbd {
   color: var(--muted);
+}
+
+.settings-search .input:not(:placeholder-shown) ~ .search-keys {
+  display: none;
+}
+
+.settings-search .input:placeholder-shown {
+  padding-right: 92px;
+}
+
+/* Links in the text, as the website's (privacy, changelog): the text's colour, underlined in the accent. */
+.content a:not([class]) {
+  color: var(--text);
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.content a:not([class]):hover {
+  color: var(--accent);
 }
 
 kbd {
@@ -223,6 +293,16 @@ kbd {
 
   .appearance {
     grid-template-columns: 1fr;
+  }
+
+  /* One column: the preview first, pinned under the tabs while you go through the choices below it. */
+  .preview {
+    order: -1;
+    top: 56px;
+    z-index: 5;
+    margin-top: 0;
+    padding: 12px 0 8px;
+    background: var(--bg);
   }
 }
 
@@ -369,6 +449,73 @@ code {
   border-bottom: 1px solid var(--border-subtle);
 }
 
+/* Short entries as a row of chips (Settings → Moderation's lengths and reasons). */
+.item-list.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  border: none;
+}
+
+.item-list.chip-list li,
+.item-list.chip-list li:last-child {
+  gap: 2px;
+  padding: 2px 2px 2px 12px;
+  font-family: inherit;
+  font-weight: 500;
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+}
+
+.item-list.chip-list li.none {
+  padding-left: 0;
+  background: none;
+  border: none;
+}
+
+.chip-list .btn-icon {
+  padding: 4px;
+  border-radius: 999px;
+}
+
+.chip-list kbd {
+  margin-left: 2px;
+}
+
+/* A label over a card of a group: Moderation's commands (options.js renderCommands), About's shortcuts. */
+.group-label {
+  margin: 14px 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+/* A reference list, not settings: tighter rows. */
+.setting-row.command-row {
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+
+.command-usage {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.command-kick {
+  flex-shrink: 0;
+  padding: 1px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
 /* An empty list says so (options.js renderList). */
 .item-list li.none {
   font-family: inherit;
@@ -391,23 +538,72 @@ code {
 }
 
 /* "Build a regex" (options.js patternBuilder): fields, the regex it makes, and a message to try it on. */
-.pattern-builder {
+/* Folded parts (.fold: "Build a regex", Moderation's commands, the channels that notify): a row like a setting's,
+   its chevron (options.js) turning as it opens. */
+.fold {
   margin-top: 12px;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
 }
 
-.pattern-builder summary {
-  padding: 8px 12px;
+.fold > summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px 11px 16px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--muted);
+  color: var(--text);
+  list-style: none;
   cursor: pointer;
+  user-select: none;
 }
 
-.pattern-builder[open] summary {
-  color: var(--text);
+.fold > summary::-webkit-details-marker {
+  display: none;
+}
+
+.fold > summary:hover {
+  background: var(--hover);
+}
+
+.fold > summary:focus-visible {
+  border-radius: var(--radius);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.fold-chevron {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+  color: var(--muted);
+  transform: rotate(-90deg);
+  transition: transform 0.15s ease;
+}
+
+.fold[open] > summary {
   border-bottom: 1px solid var(--border-subtle);
+}
+
+.fold[open] .fold-chevron {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fold-chevron {
+    transition: none;
+  }
+}
+
+.fold-body {
+  padding: 4px 12px 12px;
+}
+
+.fold-body > .card-desc {
+  margin: 8px 0 0;
 }
 
 .pb-body {
@@ -436,13 +632,6 @@ code {
 .pb-hint {
   font-size: 12px;
   color: var(--muted);
-}
-
-.pb-check {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
 }
 
 .pb-make {
@@ -486,23 +675,17 @@ code {
 }
 
 /* Settings → Notifications: the channels you follow, each with its switch. */
-.live-channels {
-  margin-top: 14px;
-}
-
 .live-head {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 8px;
-  margin-bottom: 10px;
+  gap: 6px 8px;
+  margin: 8px 0 10px;
 }
 
-.live-count {
+.live-head .input {
   flex: 1;
   min-width: 12em;
-  font-size: 13px;
-  color: var(--muted);
 }
 
 .live-list {

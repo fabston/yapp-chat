@@ -39,7 +39,7 @@
 /* The channels in this chat (lib/chat.js renderHead). */
 .pane-feeds {
   display: flex;
-  flex: 1;
+  flex: 1 1 auto;
   align-items: center;
   min-width: 0;
 }
@@ -310,8 +310,9 @@
   border-radius: 999px;
 }
 
+/* Short of room, "Reconnecting…" gives way (shortened) before the chat's name, live info and modes. */
 .pane-status {
-  flex: 0 1 auto;
+  flex: 0 1000 auto;
   min-width: 0;
   overflow: hidden;
   font-size: 11px;
@@ -471,6 +472,26 @@
   min-width: 0;
 }
 
+/* What a moderator did (lib/mod-tools.js logMessage): a quiet line with a small shield, not a box. */
+.msg.notice[data-event="modlog"] {
+  padding-top: 2px;
+  padding-bottom: 2px;
+  background: none;
+  border-left-color: transparent;
+}
+
+.msg[data-event="modlog"] .notice-icon {
+  width: 14px;
+  height: 14px;
+  color: var(--muted);
+  background: none;
+}
+
+.msg[data-event="modlog"] .notice-head {
+  font-size: 0.85em;
+  color: var(--muted);
+}
+
 .notice-pill {
   padding: 0 8px;
   font-size: 11px;
@@ -483,6 +504,111 @@
 }
 
 .msg.system {
+  color: var(--muted);
+}
+
+/* Something of yours that didn't go (lib/chat.js system's `warn`): "Not sent: this room is followers-only…". */
+.msg.system.warn {
+  margin: 3px 0;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  background: var(--warn-soft);
+  border-left: 3px solid var(--warn);
+}
+
+.msg.system.warn .system-line {
+  color: var(--text);
+}
+
+.warn-lead {
+  color: var(--warn);
+}
+
+/* Your message Twitch refused (lib/chat.js markNotSent): greyed, and said so. */
+.msg.not-sent .body {
+  opacity: 0.5;
+}
+
+.not-sent-tag {
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--warn);
+}
+
+/* /help's list (lib/mod-tools.js commandsHelp): by group, a command and what it takes and does a row; a click types it. */
+.command-help {
+  margin: 4px 0;
+  padding: 8px 10px 10px;
+  font-size: 0.9em;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.help-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+}
+
+.help-head span {
+  font-size: 0.9em;
+  color: var(--muted);
+}
+
+.help-group {
+  grid-column: 1 / -1;
+  margin: 6px 0 -2px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.help-rows {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 12px;
+  margin-top: 4px;
+  align-items: baseline;
+}
+
+.help-cmd {
+  justify-self: start;
+  padding: 0 5px;
+  font: 600 0.95em var(--mono, ui-monospace, monospace);
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--surface-3);
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.help-cmd:hover {
+  background: var(--accent-soft);
+}
+
+/* A mode's "off", after what it does: quieter than the commands. */
+.help-about .help-cmd {
+  font-weight: 500;
+  color: var(--muted);
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.help-about {
+  color: var(--text);
+}
+
+.help-usage {
+  display: block;
+  font-family: var(--mono, ui-monospace, monospace);
+  font-size: 0.85em;
   color: var(--muted);
 }
 
@@ -678,9 +804,27 @@
   color: var(--muted);
 }
 
+/* Its lines as the chat's: Settings' text size and spacing (emotes are sized from them). */
 .thread-list {
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   padding: 4px 0;
+  font-size: var(--chat-size);
+  line-height: 1.5;
+}
+
+/* Answering the conversation (lib/chat.js showThread): under the list, which shrinks for it. */
+.thread-reply {
+  flex: none;
+  padding: 10px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* Its corners follow the panel's (14px, 10px in): room for the focus glow, no clashing curves. */
+.thread-reply .input {
+  width: 100%;
+  border-radius: 9px;
 }
 
 .thread-msg {
@@ -704,12 +848,14 @@
   font-size: 0.85em;
 }
 
+/* A message you jumped to (a reply's quote, a thread, a mention): lit while the chat scrolls there and you find it, then fading. */
 .msg.flash {
-  animation: flash 1.4s ease-out;
+  animation: flash 2.8s ease-out;
 }
 
 @keyframes flash {
-  from {
+  0%,
+  40% {
     background: var(--accent-soft);
   }
 }
@@ -905,6 +1051,39 @@ img.tip-preview {
   color: var(--danger);
 }
 
+/* A row of choices in the menu: "Timeout 10m 1h 1d". */
+.menu-choices {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px 3px 10px;
+  font: 13px var(--font);
+  color: var(--text);
+}
+
+.menu-choices-label {
+  flex: 1;
+  margin-right: 6px;
+}
+
+.menu-choice {
+  min-width: 34px;
+  padding: 3px 7px;
+  font: 600 12px var(--font);
+  color: var(--text);
+  background: var(--surface-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.menu-choice:hover,
+.menu-choice:focus-visible {
+  color: var(--on-accent);
+  background: var(--accent);
+  outline: none;
+}
+
 .menu-sep {
   margin: 4px 6px;
   border: 0;
@@ -1038,14 +1217,37 @@ img.tip-preview {
   background: var(--surface-2);
 }
 
-.target-btn .icon {
+/* Its chevron (not the platform badge's mark). */
+.target-btn > .icon {
   width: 12px;
   height: 12px;
 }
 
-.target-avatar {
+/* Who you're writing to, in a merged chat: their picture (and platform, when the chat mixes them). */
+.target-pic {
+  --badge: 11px;
   width: 22px;
   height: 22px;
+}
+
+.menu-pic {
+  --badge: 10px;
+  width: 20px;
+  height: 20px;
+}
+
+/* On the menu's lighter background, and its hovered row. */
+.context-menu .source-pic .source-avatar {
+  box-shadow: 0 0 0 2px var(--surface-2);
+}
+
+.context-menu .platform-badge {
+  --ring: var(--surface-2);
+}
+
+.menu-item:hover :is(.platform-badge, .source-pic .source-avatar) {
+  --ring: var(--surface-3);
+  box-shadow: 0 0 0 2px var(--surface-3);
 }
 
 .menu-avatar {
@@ -1241,6 +1443,29 @@ img.tip-preview {
   flex-shrink: 0;
   height: 64px;
   background: linear-gradient(120deg, color-mix(in srgb, var(--user-color) 45%, transparent), color-mix(in srgb, var(--user-color) 8%, transparent)) center / cover no-repeat;
+}
+
+/* The user card and the conversation, moved by their top (lib/chat.js floating). */
+.drag-handle {
+  cursor: grab;
+  user-select: none;
+}
+
+.dragging .drag-handle {
+  cursor: grabbing;
+}
+
+/* Pinned: 📌 lit in the accent; it stays open (only its ✕ closes it). */
+.pin-btn.on {
+  color: var(--accent);
+}
+
+.card-tools .pin-btn.on {
+  color: #ffd23f;
+}
+
+.pinned {
+  box-shadow: 0 0 0 1px var(--accent-line), 0 16px 40px var(--shadow);
 }
 
 .card-tools {
@@ -1732,8 +1957,45 @@ img.tip-preview {
 }
 
 .card-mod {
+  flex-wrap: wrap;
   padding-top: 0;
   border-top: none;
+}
+
+.card-mod .card-action {
+  flex: 1 1 auto;
+}
+
+/* The timeout lengths, joined: a clock, then 10m 1h 1d. */
+.card-timeouts {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  color: var(--muted);
+}
+
+.card-timeouts > .icon {
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
+}
+
+.card-timeouts .card-action {
+  flex: none;
+  min-width: 38px;
+  border-radius: 0;
+}
+
+.card-timeouts .card-action + .card-action {
+  margin-left: -1px;
+}
+
+.card-timeouts .icon + .card-action {
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+
+.card-timeouts .card-action:last-child {
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
 .card-action.danger {
@@ -2099,6 +2361,412 @@ img.tip-preview {
   background: var(--hover);
 }
 
+/* ---- Moderating (lib/moderation.js) ---- */
+
+/* The chat modes as a button, for moderators: what's on (the pill as it is), or a quiet icon when nothing is. */
+.mod-modes {
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+
+.mod-modes:hover {
+  box-shadow: 0 0 0 1px var(--warn);
+}
+
+.mod-modes.quiet {
+  padding: 2px 4px;
+  color: var(--muted);
+  background: none;
+}
+
+.mod-modes.quiet:hover {
+  color: var(--text);
+  background: var(--surface-3);
+  box-shadow: none;
+}
+
+.mod-modes.quiet .icon {
+  width: 13px;
+  height: 13px;
+}
+
+.mod-modes .mode {
+  cursor: inherit;
+}
+
+/* "Moderate…" and the chat modes: placed like the user card. */
+.mod-panel {
+  position: absolute;
+  z-index: 6;
+  display: grid;
+  gap: 10px;
+  width: min(320px, calc(100% - 16px));
+  padding: 12px;
+  font-size: 13px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px var(--shadow);
+}
+
+.mod-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mod-reason.needed {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 2px var(--danger-soft);
+}
+
+.mod-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.mod-reasons,
+.mod-lengths,
+.mod-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mod-reasons .btn {
+  font-weight: 500;
+  border: 1px solid var(--border);
+}
+
+.mod-danger {
+  color: #fff;
+  background: var(--danger);
+  border-color: transparent;
+}
+
+.mod-row {
+  display: grid;
+  grid-template-columns: 7.5em minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.mod-row-label {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.mod-toggle {
+  padding: 5px 10px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.mod-toggle[aria-pressed="true"] {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+/* Settings → Moderation → on every message: delete, timeout, ban before the name. */
+.line-mod {
+  display: inline-flex;
+  gap: 1px;
+  margin-right: 4px;
+  vertical-align: -3px;
+}
+
+.line-mod .btn-icon {
+  width: 18px;
+  height: 18px;
+  padding: 2px;
+  color: var(--muted);
+}
+
+.line-mod .btn-icon:hover {
+  color: var(--text);
+}
+
+.line-mod .btn-icon:first-child:hover,
+.line-mod .btn-icon:last-child:hover {
+  color: var(--danger);
+}
+
+.line-mod .icon {
+  width: 13px;
+  height: 13px;
+}
+
+/* Twitch watches them (monitored) or shows their messages to mods only (restricted). */
+/* Before the name like a badge (lib/chat.js trustTag, ageTag): a solid tile as tall as the badges, an icon and a
+   word. Centred on the name as .badges are. */
+.trust-tag,
+.age-tag {
+  position: relative;
+  top: -0.1em;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 18px;
+  margin-right: 5px;
+  padding: 0 5px 0 4px;
+  font: 700 11px/1 var(--font);
+  color: #fff;
+  white-space: nowrap;
+  vertical-align: middle;
+  border-radius: 3px;
+  cursor: help;
+}
+
+.trust-tag .icon,
+.age-tag .icon {
+  width: 12px;
+  height: 12px;
+  stroke-width: 2.5;
+  /* Centred on the capitals it is, but the words are mostly lowercase: a little lower reads as centred. */
+  translate: 0 0.5px;
+}
+
+/* Twitch watches them: amber, dark text (white doesn't read on it). */
+.trust-tag {
+  color: #2b1d00;
+  background: #f5a524;
+}
+
+.trust-tag.restricted {
+  color: #fff;
+  background: #d93d42;
+}
+
+/* A new account: deep orange. */
+.age-tag {
+  background: #c2410c;
+}
+
+.deleted-by {
+  margin-left: 6px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* On a notice line: lift a timeout, shout out a raider; under a held message, allow or deny it. */
+.notice-action {
+  margin-left: auto;
+  padding: 1px 10px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  color: var(--text);
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.notice-action + .notice-action {
+  margin-left: 0;
+}
+
+.notice-action:hover {
+  border-color: var(--border-strong);
+}
+
+.notice-action.allow {
+  color: #fff;
+  background: #2ba640;
+  border-color: transparent;
+}
+
+/* Under a message AutoMod held: Allow and Deny (lib/chat.js automodButtons), where you've just read it. */
+.automod-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.automod-actions .notice-action {
+  margin-left: 0;
+  padding: 2px 14px;
+  font-size: 12px;
+}
+
+/* The moderation panel's announcement: the text, its colour, the button. */
+.mod-announce {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px;
+}
+
+.mod-announce .input {
+  grid-column: 1 / -1;
+}
+
+.mod-chatters {
+  justify-self: start;
+  gap: 6px;
+}
+
+/* "Moderate…": what this chat saw of them. */
+.mod-history {
+  margin: -4px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* "Moderate…": another length, typed. */
+.mod-other {
+  width: 64px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.mod-other.needed {
+  border-color: var(--danger);
+}
+
+/* Who's in chat. */
+.chatters-list {
+  display: grid;
+  gap: 6px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.chatters-names {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.chatter {
+  padding: 3px 8px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface-3);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.chatter:hover {
+  background: var(--hover);
+}
+
+.chatters-note {
+  width: 100%;
+  margin: 4px 2px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* A raid into a channel you moderate: protect the chat, or shout them out (lib/mod-tools.js offerRaidProtection). */
+.raid-bar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 4px 8px;
+  padding: 5px 6px 8px 12px;
+  font-size: 12px;
+  background: color-mix(in srgb, #ff9f43 14%, var(--surface));
+  border-bottom: 1px solid var(--border);
+}
+
+.raid-text {
+  color: var(--muted);
+}
+
+.raid-text strong {
+  color: var(--text);
+}
+
+.raid-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.raid-actions .btn {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+/* A first-time chatter's account under a month old. */
+/* Commands' suggestions: the usage beside the name. */
+.suggest-usage {
+  flex-shrink: 0;
+  font-family: var(--mono, ui-monospace, monospace);
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.suggest-command .suggest-name {
+  flex: none;
+}
+
+.suggest-command .suggest-source {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- A streamer live on other platforms too (ChatPane.offerSimulcast): combine the chats? ---- */
+
+.simulcast-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 6px 10px;
+  font-size: 12px;
+  background: var(--accent-soft);
+  border-bottom: 1px solid var(--border);
+}
+
+.simulcast-tiles {
+  display: flex;
+  flex: none;
+  gap: 3px;
+}
+
+.simulcast-tiles .platform-tile {
+  width: 18px;
+  height: 18px;
+}
+
+.simulcast-text {
+  flex: 1;
+  min-width: 0;
+  color: var(--muted);
+}
+
+.simulcast-text strong {
+  color: var(--text);
+}
+
+.simulcast-bar .btn {
+  flex: none;
+}
+
 /* ---- Mentions inbox (lib/mentions.js) ---- */
 
 .mentions-btn {
@@ -2114,9 +2782,9 @@ img.tip-preview {
   font-size: 10px;
   font-weight: 700;
   line-height: 16px;
-  color: #1a1300;
+  color: #fff;
   text-align: center;
-  background: var(--warn);
+  background: #e5484d; /* the toolbar icon's count (background.js), in both themes */
   border-radius: 999px;
 }
 
@@ -2148,10 +2816,13 @@ img.tip-preview {
   overflow-y: auto;
 }
 
+/* A mention as chat shows it: the channel's picture (and platform), who, where and when, what they said. */
 .mention-row {
-  display: block;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
   width: 100%;
-  padding: 7px 8px;
+  padding: 8px;
   font: inherit;
   color: var(--text);
   text-align: left;
@@ -2163,6 +2834,43 @@ img.tip-preview {
 
 .mention-row:hover {
   background: var(--surface-3);
+}
+
+/* New since you last opened the list: tinted, with a dot. */
+.mention-row.new {
+  background: var(--accent-soft);
+}
+
+.mention-row.new .mention-top::after {
+  width: 6px;
+  height: 6px;
+  margin-left: auto;
+  flex: none;
+  align-self: center;
+  background: var(--accent);
+  border-radius: 50%;
+  content: "";
+}
+
+.mention-source {
+  --badge: 12px;
+  width: 28px;
+  height: 28px;
+  margin-top: 2px;
+}
+
+/* The rings around its picture and badge in the list's colour (a row's when pointed at). */
+.mention-source .source-avatar {
+  box-shadow: none;
+}
+
+.mention-source .platform-badge {
+  --ring: var(--surface-2);
+}
+
+.mention-body {
+  flex: 1;
+  min-width: 0;
 }
 
 .mention-top {
@@ -2183,13 +2891,54 @@ img.tip-preview {
 .mention-text {
   margin-top: 2px;
   font-size: 13px;
+  line-height: 1.5;
   overflow-wrap: anywhere;
 }
 
+.mention-text .emote {
+  display: inline;
+  height: 1.7em;
+  margin: -2px 0;
+  vertical-align: middle;
+}
+
+/* Your name or the highlight word in it. */
+.mention-text mark {
+  padding: 0 2px;
+  color: inherit;
+  background: var(--warn-soft);
+  border-radius: 3px;
+  box-shadow: inset 0 -2px var(--warn);
+}
+
+/* Nothing yet: what it's waiting for (and signing in, if that's what it needs). */
 .mentions-empty {
-  padding: 12px 8px;
-  font-size: 12px;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 22px 16px 18px;
+  font-size: 13px;
   color: var(--muted);
+  text-align: center;
+}
+
+.mentions-empty strong {
+  color: var(--text);
+}
+
+.mentions-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 4px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 50%;
+}
+
+.mentions-empty .btn {
+  margin-top: 6px;
 }
 
 /* ---- Settings → Lines: Compact ---- */

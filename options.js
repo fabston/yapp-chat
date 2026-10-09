@@ -6,9 +6,11 @@
 import { icon } from './lib/icons.js';
 import { backupText, CHAT_FONTS, clearNotes, COMMON_BOTS, DEFAULTS, EMOTE_SIZES, FONT_SIZES, isNotesKey, liveExceptWith, loadKickAuth, loadNotes, loadSettings, loadTwitchAuth, notifiesFor, readBackup, saveKickAuth, saveNotes, saveSettings, saveTwitchAuth } from './lib/settings.js';
 import { kickPicture, kickSignIn, kickSignOut } from './lib/kick.js';
-import { entryRegex, patternFor, readableColor, setNameTheme } from './lib/format.js';
+import { entryRegex, formatDuration, patternFor, readableColor, setNameTheme } from './lib/format.js';
+import { commandGroups } from './lib/commands.js';
+import { parseDuration, shortDuration } from './lib/moderation.js';
 import { freshTwitchAuth, twitchFollowedChannels, twitchProfile, twitchSignIn, twitchSignOut, validateToken } from './lib/twitch.js';
-import { dropdown, el, platformBadge } from './lib/ui.js';
+import { checkbox, dropdown, el, platformBadge } from './lib/ui.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -178,10 +180,10 @@ function entryView(entry) {
 }
 
 /** A list of names or words from settings[key], each with a ✕ that removes it, or `empty` when there are none. */
-function renderList(id, key, empty, removeLabel) {
+function renderList(id, key, empty, removeLabel, view = entryView) {
   const items = settings[key].map((value) => {
     const li = document.createElement('li');
-    li.append(entryView(value));
+    li.append(view(value));
     const remove = document.createElement('button');
     remove.type = 'button';
     remove.className = 'btn btn-ghost btn-icon';
@@ -205,9 +207,11 @@ function render() {
   $('kickName').textContent = kickAuth.name || '';
 
   switchRow('highlightNameRow', settings.highlightName);
+  switchRow('mentionWordsRow', settings.mentionWords);
   switchRow('autoOpenRow', settings.autoOpen);
   switchRow('recentRow', settings.recentMessages);
   switchRow('cardLogsRow', settings.cardLogs);
+  switchRow('offerSimulcastRow', settings.offerSimulcast);
   switchRow('timestampsRow', settings.timestamps);
   switchRow('badgesRow', settings.badges);
   switchRow('altRowsRow', settings.altRows);
@@ -215,6 +219,7 @@ function render() {
   // Live notifications ask Twitch which channels you follow: off, and saying so, until you're signed in.
   $('liveNotifyRow').disabled = !auth.token;
   switchRow('liveNotifyRow', settings.liveNotify && Boolean(auth.token));
+  switchRow('mentionNotifyRow', settings.mentionNotify);
   $('liveNotifyDesc').textContent = auth.token ? 'A desktop notification; click it to open the stream. For all of them, or the ones you choose below.' : 'Sign in to Twitch first (Accounts, above).';
   renderLiveChannels();
   applyTheme();
@@ -236,6 +241,20 @@ function render() {
   renderList('hiddenList', 'hiddenUsers', 'No one hidden.', (login) => `Show messages from ${login} again`);
   renderList('wordList', 'highlightWords', 'No words yet.', (word) => `Stop highlighting ${word}`);
   renderList('hiddenWordList', 'hiddenWords', 'No words yet.', (word) => `Stop hiding ${word}`);
+  // Lengths as chips: "10m", its length in words on hover; the first (the quick one) marked with its key.
+  renderList('modTimeoutList', 'modTimeouts', '', (s) => `Remove ${formatDuration(s)}`, (s) => {
+    const chip = Object.assign(document.createElement('span'), { textContent: shortDuration(s), title: formatDuration(s) });
+    if (s === settings.modTimeouts[0]) chip.append(' ', Object.assign(document.createElement('kbd'), { textContent: 'T', title: 'The quick one: T and the message buttons' }));
+    return chip;
+  });
+  renderList('modReasonList', 'modReasons', 'No reasons yet.', (r) => `Remove ${r}`, (r) => Object.assign(document.createElement('span'), { textContent: r }));
+  // The last length can't go (a message's buttons need one).
+  for (const remove of $('modTimeoutList').querySelectorAll('button')) remove.hidden = settings.modTimeouts.length === 1;
+  switchRow('modButtonsRow', settings.modButtons);
+  switchRow('modKeysRow', settings.modKeys);
+  switchRow('modLogRow', settings.modLog);
+  switchRow('raidProtectRow', settings.raidProtect);
+  switchRow('flagNewAccountsRow', settings.flagNewAccounts);
 
   $('emoteRows').replaceChildren(
     ...EMOTE_SETS.map(([key, name, site]) => {
@@ -311,6 +330,15 @@ const SCOPE_FEATURES = [
   ['moderator:manage:banned_users', 'mod tools: timeout and ban'],
   ['moderator:manage:chat_messages', 'mod tools: delete messages'],
   ['moderator:read:followers', 'mod tools: since when someone follows, in their user card'],
+  ['moderator:manage:chat_settings', 'mod tools: chat modes (slow, followers-only, sub-only…)'],
+  ['moderator:manage:automod', "mod tools: AutoMod's held messages, to allow or deny"],
+  ['moderator:manage:shield_mode', 'mod tools: Shield Mode'],
+  ['moderator:manage:warnings', 'mod tools: warnings'],
+  ['moderator:read:suspicious_users', 'mod tools: suspicious users marked'],
+  ['moderator:read:moderators', 'mod tools: what moderators do, in the chat'],
+  ['moderator:read:chatters', "mod tools: who's in chat"],
+  ['moderator:manage:announcements', 'mod tools: announcements'],
+  ['moderator:manage:shoutouts', 'mod tools: shoutouts'],
 ];
 
 /** Signed in before some features asked for their permission: say what's missing, and fix it in one click. */
@@ -368,14 +396,17 @@ $('kickSignOutBtn').addEventListener('click', async () => {
 /* ---- Highlights, display ---- */
 
 $('highlightNameRow').addEventListener('click', () => saveSettings({ highlightName: !settings.highlightName }));
+$('mentionWordsRow').addEventListener('click', () => saveSettings({ mentionWords: !settings.mentionWords }));
 $('autoOpenRow').addEventListener('click', () => saveSettings({ autoOpen: !settings.autoOpen }));
 $('recentRow').addEventListener('click', () => saveSettings({ recentMessages: !settings.recentMessages }));
 $('cardLogsRow').addEventListener('click', () => saveSettings({ cardLogs: !settings.cardLogs }));
+$('offerSimulcastRow').addEventListener('click', () => saveSettings({ offerSimulcast: !settings.offerSimulcast }));
 $('timestampsRow').addEventListener('click', () => saveSettings({ timestamps: !settings.timestamps }));
 $('badgesRow').addEventListener('click', () => saveSettings({ badges: !settings.badges }));
 $('altRowsRow').addEventListener('click', () => saveSettings({ altRows: !settings.altRows }));
 $('cosmeticsRow').addEventListener('click', () => saveSettings({ cosmetics: !settings.cosmetics }));
 $('liveNotifyRow').addEventListener('click', () => saveSettings({ liveNotify: !settings.liveNotify }));
+$('mentionNotifyRow').addEventListener('click', () => saveSettings({ mentionNotify: !settings.mentionNotify }));
 
 /* ---- Appearance preview ---- */
 
@@ -412,10 +443,11 @@ function renderPreview() {
     if (settings.timestamps) msg.append(el('span', 'ts', time));
     if (settings.badges && badges.length) {
       const wrap = el('span', 'badges');
-      for (const [letter, kind] of badges) {
-        const pill = el('span', 'badge-pill', letter);
-        pill.dataset.kind = kind;
-        wrap.append(pill);
+      for (const [file, title] of badges) {
+        const img = el('img', 'badge');
+        img.src = `assets/badges/${file}.png`;
+        img.alt = img.title = title;
+        wrap.append(img);
       }
       msg.append(wrap);
     }
@@ -440,23 +472,24 @@ function renderPreview() {
   notice.append(head);
 
   $('preview').replaceChildren(
-    line({ name: 'PixelPanda', color: '#7C4DFF', badges: [['B', 'broadcaster']], body: ['welcome in chat ', emote(25, 'Kappa')], time: '21:04' }),
-    line({ name: 'PogFan', color: '#FF4500', badges: [['M', 'moderator'], ['S', 'subscriber']], body: [emote(425618, 'LUL'), ' that was so close'], time: '21:04' }),
-    line({ name: 'Painted_Name', color: '#8A2BE2', badges: [['S', 'subscriber']], body: ['my 7TV paint ', emote(41, 'Kreygasm')], time: '21:05', paint: 'linear-gradient(90deg, #ff5f6d, #ffc371, #2ec5ff)' }),
+    // Badges as a channel shows them: Twitch's moderator and VIP, and subscriber ranks (the website's duck ones).
+    line({ name: 'PixelPanda', color: '#7C4DFF', badges: [['twitch-vip', 'VIP'], ['sub-3-month', '3-month subscriber']], body: ['hi chat ', emote(25, 'Kappa')], time: '21:04', fold: '×3' }),
+    line({ name: 'PogFan', color: '#FF4500', badges: [['twitch-moderator', 'Moderator'], ['sub-12-month', '1-year subscriber']], body: [emote(425618, 'LUL'), ' that was so close'], time: '21:04' }),
+    line({ name: 'Painted_Name', color: '#8A2BE2', badges: [['sub-6-month', '6-month subscriber']], body: ['my 7TV paint ', emote(41, 'Kreygasm')], time: '21:05', paint: 'linear-gradient(90deg, #ff5f6d, #ffc371, #2ec5ff)' }),
     notice,
-    line({ name: 'quiet_viewer', color: '#2E8B57', body: ['first time here'], time: '21:05', fold: '×3', first: true }),
-    line({ name: 'Jordan', color: '#DAA520', body: ['same, it was insane'], time: '21:06', reply: ['PogFan', 'that was so close'] }),
+    line({ name: 'quiet_viewer', color: '#2E8B57', body: ['first time here'], time: '21:05', first: true }),
+    line({ name: 'Jordan', color: '#DAA520', badges: [['sub-1-month', 'Subscriber']], body: ['same, it was insane'], time: '21:06', reply: ['PogFan', 'that was so close'] }),
   );
 }
 
 /* ---- Privacy & data: what Yapp Chat keeps ---- */
 
 async function renderData() {
-  const [notes, { emoteUse = {} }, { mentions = [] }] = await Promise.all([loadNotes(), chrome.storage.local.get('emoteUse'), chrome.storage.session.get('mentions')]);
+  const [notes, { emoteUse = {}, mentions = [] }] = await Promise.all([loadNotes(), chrome.storage.local.get(['emoteUse', 'mentions'])]);
   const rows = [
     ['Private notes about people (synced)', Object.keys(notes || {}).length, 'note', clearNotes],
     ['Emotes you used (for Recent; this device)', Object.keys(emoteUse).length, 'emote', () => chrome.storage.local.remove('emoteUse')],
-    ['Mentions inbox (until the browser closes)', mentions.length, 'mention', () => chrome.storage.session.set({ mentions: [], unread: 0 })],
+    ['Mentions inbox (the last 100; this device)', mentions.length, 'mention', () => chrome.storage.local.set({ mentions: [], mentionsUnread: 0 })],
   ];
   $('dataRows').replaceChildren(
     ...rows.map(([title, count, noun, clear]) => {
@@ -492,9 +525,14 @@ function ownText(node) {
  * Show the settings that match the search, in blocks: a section's heading and what's under each of its h3s. A
  * block whose own text matches shows whole (a list, its form); otherwise only its matching rows, in their cards.
  */
+/** What the search unfolded (a <details> with a match inside), folded again when the search changes. */
+const searchOpened = new Set();
+
 function searchSettings() {
   const term = $('settingsSearch').value.trim().toLowerCase();
   for (const node of document.querySelectorAll('.search-out')) node.classList.remove('search-out');
+  for (const details of searchOpened) details.open = false;
+  searchOpened.clear();
   $('searchNone').hidden = true;
   if (!term) return;
   let found = 0;
@@ -519,8 +557,16 @@ function searchSettings() {
       }
       const rows = block.flatMap((node) => [...node.querySelectorAll('.setting-row')]);
       const hits = rows.filter((row) => row.textContent.toLowerCase().includes(term));
+      const holds = (node) => hits.some((row) => node.contains(row));
       for (const row of rows) row.classList.toggle('search-out', !hits.includes(row));
-      for (const node of block) node.classList.toggle('search-out', !hits.some((row) => node.contains(row)));
+      for (const node of block) node.classList.toggle('search-out', !holds(node));
+      // Inside a folded part (Moderation's commands, About's mod keys): its cards without a match go, it opens for one with.
+      for (const node of block.flatMap((n) => [...n.querySelectorAll('details .card, details .group-label, details .card-desc')])) node.classList.toggle('search-out', !holds(node));
+      for (const details of block.flatMap((n) => (n.matches('details') ? [n] : [...n.querySelectorAll('details')]))) {
+        if (!holds(details) || details.open) continue;
+        details.open = true;
+        searchOpened.add(details);
+      }
       if (hits.length) shown++;
     }
     section.classList.toggle('search-out', !shown);
@@ -532,11 +578,15 @@ function searchSettings() {
 }
 
 $('settingsSearch').addEventListener('input', searchSettings);
-// "/" anywhere but a text box: to the search (as on many sites).
+// To the search: "/" anywhere but a text box (as on many sites), or Ctrl/⌘+F anywhere (the browser's find bar
+// matters less here than the settings' own search); what's in it is selected, to type over.
 document.addEventListener('keydown', (e) => {
-  if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey || e.target.closest?.('input, textarea, select, [contenteditable]')) return;
+  const slash = e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.target.closest?.('input, textarea, select, [contenteditable]');
+  const find = (e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'f';
+  if (!slash && !find) return;
   e.preventDefault();
   $('settingsSearch').focus();
+  $('settingsSearch').select();
 });
 
 /* ---- Reset: every setting back to how Yapp Chat starts (not sign-ins, notes or the chat window's chats) ---- */
@@ -601,6 +651,14 @@ $('importFile').addEventListener('change', async (e) => {
 });
 
 /* ---- Sidebar: icons, and the section you're in ---- */
+
+// Shortcuts as this computer's keyboard has them: ⌘ and ⌥ on a Mac (About's, the search's).
+const mac = /Mac|iPhone|iPad/.test(navigator.platform);
+if (mac) {
+  for (const key of document.querySelectorAll('kbd[data-mod]')) key.textContent = '⌘';
+  for (const key of document.querySelectorAll('kbd[data-alt]')) key.textContent = '⌥';
+}
+if (mac) $('searchKey').textContent = '⌘F';
 
 const navLinks = [...document.querySelectorAll('.nav a')];
 for (const link of navLinks) link.prepend(icon(link.dataset.icon));
@@ -739,6 +797,58 @@ async function addEntry(key, entry, errorId) {
   return true;
 }
 
+/**
+ * Moderation → Commands: the same list as /help (lib/commands.js commandGroups), a card per group, each command a row
+ * the search finds ("slow" leaves /slow); the ones Kick has too say so.
+ */
+function renderCommands() {
+  const kick = new Set(commandGroups('kick').flatMap(([, rows]) => rows.map(([name]) => name)));
+  const groups = commandGroups('twitch');
+  const parts = groups.flatMap(([title, rows]) => {
+    const label = el('p', 'group-label', title);
+    label.dataset.noSearch = '';
+    const card = el('div', 'card nested');
+    for (const [name, command, off] of rows) {
+      const row = el('div', 'setting-row static command-row');
+      const what = el('span', 'setting-title');
+      what.append(el('code', '', `/${name}`), ...(command.usage ? [' ', el('span', 'command-usage', command.usage)] : []));
+      const desc = el('span', 'setting-desc', command.about);
+      if (off) desc.append(' · ', el('code', '', `/${off}`), ' turns it off');
+      const text = el('span', 'setting-text');
+      text.append(what, desc);
+      row.append(text, ...(kick.has(name) && name !== 'help' ? [el('span', 'command-kick', 'Kick too')] : []));
+      card.append(row);
+    }
+    return [label, card];
+  });
+  $('commandList').replaceWith(...parts);
+  $('commandSummary').textContent = `All ${groups.flatMap(([, rows]) => rows).length} commands`;
+}
+renderCommands();
+
+// Moderation: timeout lengths (up to 6, as typed: 10m, 1h…) and saved reasons.
+$('modTimeoutForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const seconds = parseDuration($('modTimeoutInput').value);
+  if (!seconds) return ($('modTimeoutError').textContent = 'A length like 30s, 10m, 1h, 1d or 1w, up to 2 weeks.');
+  if (settings.modTimeouts.length >= 6 && !settings.modTimeouts.includes(seconds)) return ($('modTimeoutError').textContent = 'Six lengths at most: remove one first.');
+  await saveSettings({ modTimeouts: [...new Set([...settings.modTimeouts, seconds])] });
+  $('modTimeoutInput').value = '';
+  $('modTimeoutError').textContent = '';
+});
+$('modTimeoutInput').addEventListener('input', () => ($('modTimeoutError').textContent = ''));
+$('modReasonForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const reason = $('modReasonInput').value.trim();
+  if (settings.modReasons.length >= 12 && !settings.modReasons.includes(reason)) return ($('modReasonError').textContent = 'Twelve reasons at most: remove one first.');
+  if (reason) await saveSettings({ modReasons: [...new Set([...settings.modReasons, reason])] });
+  $('modReasonInput').value = '';
+});
+$('modReasonInput').addEventListener('input', () => ($('modReasonError').textContent = ''));
+for (const [row, key] of [['modButtonsRow', 'modButtons'], ['modKeysRow', 'modKeys'], ['modLogRow', 'modLog'], ['raidProtectRow', 'raidProtect'], ['flagNewAccountsRow', 'flagNewAccounts']]) {
+  $(row).addEventListener('click', () => saveSettings({ [key]: !settings[key] }));
+}
+
 for (const [form, input, key, error] of [['wordForm', 'wordInput', 'highlightWords', 'wordError'], ['hideWordForm', 'hideWordInput', 'hiddenWords', 'hideWordError']]) {
   $(form).addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -760,19 +870,12 @@ function patternBuilder(key, errorId) {
     if (hint) wrap.append(el('span', 'pb-hint', hint));
     return wrap;
   };
-  const check = (label) => {
-    const wrap = el('label', 'pb-check');
-    const box = el('input');
-    box.type = 'checkbox';
-    wrap.append(box, label);
-    return [wrap, box];
-  };
   const words = Object.assign(el('input', 'input'), { placeholder: 'giveaway, free sub', spellcheck: false, autocomplete: 'off' });
   const places = [['words', 'As whole words'], ['anywhere', 'Anywhere, also inside words'], ['start', 'At the start of the message'], ['whole', 'As the whole message']];
   const where = dropdown(places, 'words', () => update(), 'Where');
-  const [caseLabel, matchCase] = check('Match case');
-  const [stretchLabel, stretched] = check('Letters stretched too (lol, LOOOOL)');
-  const [tricksLabel, tricks] = check('Spam tricks too (fr3e, f.r.e.e, freesub)');
+  const [caseLabel, matchCase] = checkbox('Match case');
+  const [stretchLabel, stretched] = checkbox('Letters stretched too (lol, LOOOOL)');
+  const [tricksLabel, tricks] = checkbox('Spam tricks too (fr3e, f.r.e.e, freesub)');
   const out = el('code', 'pb-out');
   const sample = Object.assign(el('input', 'input'), { placeholder: 'Type a message to try it', spellcheck: false, autocomplete: 'off' });
   const result = el('p', 'pb-result');
@@ -804,7 +907,7 @@ function patternBuilder(key, errorId) {
   });
   update();
 
-  const box = el('details', 'pattern-builder');
+  const box = el('details', 'fold pattern-builder');
   const body = el('div', 'pb-body');
   const tryRow = el('div', 'pb-try');
   tryRow.append(field('Try it', sample), result);
@@ -817,6 +920,9 @@ function patternBuilder(key, errorId) {
 
 $('wordBuilder').append(patternBuilder('highlightWords', 'wordError'));
 $('hideWordBuilder').append(patternBuilder('hiddenWords', 'hideWordError'));
+
+// Every folded part (.fold: "Build a regex", Moderation's commands, the channels that notify): a chevron that turns.
+for (const summary of document.querySelectorAll('.fold > summary')) summary.append(icon('chevron-down', 'icon fold-chevron'));
 
 $('sizeChoices').replaceChildren(
   ...Object.entries(FONT_SIZES).map(([label, size]) => {
@@ -842,7 +948,7 @@ $('emoteSizeChoices').replaceChildren(
 chrome.storage.onChanged.addListener(async (changes, area) => {
   const signIns = area === 'local' && (changes.twitchAuth || changes.kickAuth);
   // Notes, emotes used, mentions (chats write these all the time): only their counts.
-  if (area === 'session' || (area === 'local' && !signIns) || (area === 'sync' && Object.keys(changes).every(isNotesKey))) return renderData();
+  if ((area === 'local' && !signIns) || (area === 'sync' && Object.keys(changes).every(isNotesKey))) return renderData();
   if (area === 'sync') settings = await loadSettings();
   if (signIns && changes.twitchAuth) {
     const before = auth.userId;

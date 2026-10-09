@@ -2,6 +2,49 @@
 
 What changed in each version of Yapp Chat, newest first. Get it from the [Chrome Web Store](https://chromewebstore.google.com/detail/yapp-chat/ocebmcgmildjdidagnnifoegheabnpgd).
 
+## 1.0.23
+- Mod tools, much better (Twitch moderators: sign in again once, Settings shows it, for the new ones):
+  - Your own timeout lengths, in Settings → *Moderation*: in one row on a message's menu and the user card, the first also on a message's buttons. The user card offers to lift a timeout or ban while one holds.
+  - *Moderate…*, on a message's menu and the user card: what this chat saw of them ("Timed out until 16:20 · 2 timeouts here lately"), a reason (typed, or one you saved), any of your lengths or one you type, a ban, lifting a timeout or ban, and on Twitch a warning.
+  - Lift a timeout or ban from its line in the chat, or from the user card.
+  - Who timed someone out or banned them, and why, on its line; what else moderators do (chat modes, warnings, VIPs, unbans…) as quiet lines of their own. On Kick, who banned and unbanned.
+  - Twitch: messages AutoMod holds show up in the chat, with who sent them and *Allow* and *Deny* right under them.
+  - Twitch: change the chat modes from the chat's header: slow mode, followers-only, subscribers-only, emote-only, unique chat and Shield Mode.
+  - Twitch: suspicious users get a *Monitored* or *Restricted* badge before their name.
+  - Keys on the message you point at: D deletes it, T times them out, B bans them. Mod buttons on every message, if you like.
+  - Commands in the message box: type `/` for the list (`/timeout name 10m reason`, `/ban`, `/unban`, `/warn`, `/slow`, `/followers`, `/emoteonly`, `/shield`, `/clear`, `/announce`, `/shoutout`… and `/help`). Twitch stopped taking them through chat; these go through its API. On Kick: timeout, ban and unban.
+  - Settings → *Moderation* lists the commands too (folded away, for those who moderate), by group, with what each takes; the search at the top finds them ("slow", "shoutout").
+  - Twitch: who's in chat, by role (broadcaster, moderators, VIPs, viewers) and with a search (`/chatters`, or the chat's header).
+  - Twitch: announcements (in the channel's colour or another) from the chat's header, and shoutouts from a raid or `/shoutout`.
+  - Twitch: raid protection. When a raid of 20 or more comes in, a bar offers followers-only for 10 minutes, Shield Mode and a shoutout (Settings → *Moderation* turns it off).
+  - Twitch: a first-time chatter whose account is under a month old gets a badge before their name with the account's age, like 🌱 3d (point at it for the date).
+- The panel that opens when you click a reply is now called *Thread*, and you can answer right from it: a box at the bottom replies to its newest message (keeping it in the same thread). New replies, yours too, show up in it as they come, and what you'd typed in the message box stays. Its lines now use the chat's text size, so emotes there are no longer oversized.
+- Drag a user card or a thread by its top to move it, and 📌 pin it: it stays open when you click elsewhere (its ✕ closes it), and the next name or reply you click opens in a box of its own, so you can keep several open. A pinned thread keeps taking in new replies.
+- A message you jump to (from a reply's quote, a thread or a mention) stays lit longer, so it's easy to spot.
+- When Twitch refuses a message you sent (followers-only, subscribers-only, slow mode, a duplicate…), the chat says so plainly: "Not sent: …" in the warning colour, and your message is greyed and marked *Not sent* rather than looking sent. Failed mod actions and commands stand out the same way.
+- In a chat that combines platforms, who you're writing to shows its platform (a Twitch or Kick badge on the picture), on the button and in its menu, so the same name on Twitch and Kick is told apart.
+- Settings → *Notifications*: the channels you follow fold away under one line that says how many notify ("Notifying for 12 of the 240 channels you follow"); open it to choose.
+- Settings → *Appearance*: the choices line up, the preview has a header level with them, and in a narrow window the preview comes first and stays in view while you go through the choices. *Lines* is now *Spacing*.
+- Settings → *About*: the shortcuts in groups (in chat, typing, mouse), `/` among them, with ⌘ and ⌥ on a Mac, and the new mod keys folded away for those who moderate; the search at the top finds them too.
+- Settings: ⌘F (Ctrl+F) goes to the search at the top, as `/` already did; the search box shows both.
+- Settings' parts that fold away (like *Build a regex*) look like the rest of Settings, with an arrow that turns as they open; its checkboxes are in the theme's colours and line up with their words. Links in Settings' text look like yapp.chat's, not the browser's purple.
+- In a narrow chat, "Reconnecting…" in the header no longer runs into the channel's live time and viewers: it's shortened instead (point at it for all of it).
+
+## 1.0.22
+- The chat preview in Settings → *Appearance* shows real badges (moderator, VIP and subscriber ranks) instead of letters.
+
+## 1.0.21
+- The mentions inbox, improved:
+  - It collects messages with your name. Highlight words still stand out in chat, but go to the inbox only if you turn on *Also collect highlight words in Mentions* (Settings → *Highlights*), so a common word doesn't fill it.
+  - Mentions look like chat: the channel's picture with its platform, emotes as pictures, your name (or highlight word) marked, and "5 minutes ago".
+  - New ones are marked until you've seen them.
+  - Clicking one goes to that message in its chat (and flashes it), not just to the chat.
+  - It keeps the last 100 after the browser closes (on this device; Settings → *Privacy & data* clears it), and the count on the toolbar icon comes back with them.
+  - Empty, it says what it's waiting for (your name) and, signed out, offers to sign in.
+  - New in Settings → *Notifications*: a desktop notification for each mention (off at first). More at once update one notification ("3 new mentions"); a click opens that chat at the message.
+  - The unread count on the toolbar icon and the bell is red with white figures, easier to see on the yellow duck.
+- Open a streamer who's live on several platforms at once (like xQc on Twitch and Kick) and a bar offers to combine their chats into one. It looks for the same name on Twitch, Kick and YouTube (for YouTube, first the channel on their Kick profile), and only offers where they're live right now. ✕ hides it for that streamer until the browser restarts; Settings → *Chat* turns it off.
+
 ## 1.0.20
 - Settings → *About*: the help links (Discord, the website, the changelog, GitHub, the privacy policy) as cards with their icons.
 

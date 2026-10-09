@@ -6,6 +6,7 @@
 import { formatCount } from './lib/format.js';
 import { liveExceptWith, loadNotes, loadSettings, loadTwitchAuth, notifiesFor, saveNotes, saveSettings } from './lib/settings.js';
 import { sourceFromUrl } from './lib/sources.js';
+import { popOutUrl } from './lib/window.js';
 import { kickLiveInfo } from './lib/kick.js';
 import { twitchFollowedLive, twitchLiveInfo } from './lib/twitch.js';
 
@@ -40,12 +41,33 @@ chrome.runtime.onInstalled.addListener(async () => {
   if (all) await saveNotes(all);
 });
 
-// Unread mentions (lib/mentions.js) on the toolbar icon.
-chrome.storage.onChanged.addListener((changes, area) => {
-  if (area !== 'session' || !changes.unread) return;
-  const unread = changes.unread.newValue || 0;
+// Unread mentions (lib/mentions.js) on the toolbar icon, again when the browser starts or Yapp Chat updates
+// (they're kept; the icon's count isn't).
+function showUnread(unread = 0) {
   chrome.action.setBadgeText({ text: unread ? (unread > 99 ? '99+' : String(unread)) : '' });
-  chrome.action.setBadgeBackgroundColor({ color: '#ff9a1f' });
+  // Red with white figures, like other apps' unread counts: orange ran into the yellow duck under it.
+  chrome.action.setBadgeBackgroundColor({ color: '#e5484d' });
+  chrome.action.setBadgeTextColor({ color: '#ffffff' });
+}
+const restoreUnread = async () => showUnread((await chrome.storage.local.get('mentionsUnread')).mentionsUnread);
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'local' && changes.mentionsUnread) showUnread(changes.mentionsUnread.newValue);
+});
+chrome.runtime.onStartup.addListener(restoreUnread);
+chrome.runtime.onInstalled.addListener(restoreUnread);
+
+// A new mention (Settings → Notifications): one notification, updated as more come ("3 new mentions"), not a stack.
+chrome.storage.onChanged.addListener(async (changes, area) => {
+  const [latest] = (area === 'local' && changes.mentions?.newValue) || [];
+  if (!latest || latest.id === changes.mentions.oldValue?.[0]?.id || !(await loadSettings()).mentionNotify) return;
+  const { mentionsUnread = 1 } = await chrome.storage.local.get('mentionsUnread');
+  chrome.notifications.create('mention', {
+    type: 'basic',
+    iconUrl: latest.avatar ? await pictureFor(latest.avatar) : 'icons/icon128.png',
+    title: mentionsUnread > 1 ? `${mentionsUnread} new mentions` : `${latest.user.name} in ${latest.label}`,
+    message: mentionsUnread > 1 ? `${latest.user.name} in ${latest.label}: ${latest.text}` : latest.text,
+    priority: 1,
+  });
 });
 
 function openPanel(tabId) {
@@ -119,7 +141,13 @@ chrome.alarms.onAlarm.addListener((alarm) => alarm.name === 'live' && checkLive(
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'sync' && changes.liveNotify) scheduleLive();
 });
-chrome.notifications.onClicked.addListener((id) => {
+chrome.notifications.onClicked.addListener(async (id) => {
+  // A mention: the newest one's chat in a window of its own, at the message.
+  if (id === 'mention') {
+    chrome.notifications.clear(id);
+    const [latest] = (await chrome.storage.local.get('mentions')).mentions || [];
+    if (latest) chrome.windows.create({ url: `${popOutUrl([latest.source])}&message=${encodeURIComponent(latest.id)}`, type: 'popup', width: 420, height: 720 });
+  }
   if (!id.startsWith('live:')) return;
   chrome.tabs.create({ url: `https://www.twitch.tv/${id.slice(5)}` });
   chrome.notifications.clear(id);

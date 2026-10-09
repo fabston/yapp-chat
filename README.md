@@ -15,11 +15,15 @@ A free, open-source Chrome and Brave extension. No account needed, no tracking.
 - 😂 **Every emote.** Twitch, 7TV, BetterTTV and FrankerFaceZ emotes, with a picker, favourites and `:` suggestions as you type. Hover one for a big preview.
 - 🎨 **Paints and badges.** 7TV name paints and badges show up live, plus BetterTTV and FrankerFaceZ badges.
 - 🪪 **User cards.** Click a name to see their account age, followers, earlier names, timeouts and bans, and their chat logs, with search.
-- 🔔 **Mentions.** Messages with your name or your highlight words (or a regex) collect in one inbox, with a count on the toolbar icon.
+- 🔔 **Mentions.** Messages with your name collect in one inbox (your highlight words too, if you like), with a count on the toolbar icon.
 - 🧘 **A calmer chat.** Hide bots, `!commands`, people you don't want to read, or messages with certain words. Highlights and hidden words take regexes too, with a small builder to make them.
 - ⏸️ **It holds still.** The chat stops scrolling while you hover a name, read a reply or open a card, so nothing jumps away from you.
 - 💬 **Follow a conversation.** Click a reply for the whole back-and-forth in one place, emotes and all, and jump to any message in it.
-- 🛡️ **Mod tools.** Delete and timeout with a click on the message, ban from its menu or the user card, on Twitch and Kick.
+- 🛡️ **Mod tools, on Twitch and Kick.** Delete, time out (your own lengths and reasons) and ban from the message itself, its menu, the user card or a key (D, T, B). Lift a timeout from its line.
+  - ⌨️ `/commands` in the message box with suggestions: `/timeout name 10m spam`, `/ban`, `/unban`, `/warn`, `/slow`, `/followers`, `/shield`, `/announce`, `/shoutout`…
+  - 👀 See what other mods do: who timed out whom and why, chat mode changes, warnings.
+  - 🤖 Twitch: AutoMod's held messages right in the chat, to allow or deny; suspicious users tagged; chat modes and Shield Mode from the header; who's in chat; announcements and shoutouts.
+  - 🚨 Twitch: raid protection (followers-only for 10 minutes, Shield Mode or a shoutout in one click) and a tag on first-time chatters with brand-new accounts.
 - 📣 **Go-live alerts.** Optional desktop notifications when channels you follow go live: all of them, or just the ones you pick.
 - 🌗 **Your look.** Dark or light, compact or comfortable, and your choice of font and emote size.
 

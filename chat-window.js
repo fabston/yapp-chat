@@ -54,6 +54,10 @@ function reconcile(splits) {
   // Saved order, left to right.
   for (const key of wanted.keys()) $('splits').append(panes.get(key).root);
   $('emptyState').hidden = panes.size > 0;
+  if (revealing && panes.has(revealing.key)) {
+    panes.get(revealing.key).reveal(revealing.id);
+    revealing = null;
+  }
 }
 
 $('addForm').addEventListener('submit', async (e) => {
@@ -72,10 +76,17 @@ $('addForm').addEventListener('submit', async (e) => {
 $('addInput').addEventListener('input', () => $('addInput').setCustomValidity(''));
 channelSuggest($('addInput'), ctx);
 $('settingsBtn').addEventListener('click', () => chrome.runtime.openOptionsPage());
-// Mentions inbox: a mention opens its chat as a column here (if it isn't one already).
+// Mentions inbox: a mention goes to its message, in a column with its channel (alone or merged), else in a new one.
+let revealing = null; // { key, id }: a column on its way (reconcile), and the message to go to in it
 $('settingsBtn').before(
   mentionsButton({
-    onOpen: (source) => saveSplits((splits) => (splits.some((c) => chatKey(c) === chatKey([source])) ? splits : [...splits, [source]])),
+    ctx,
+    onOpen: (source, id) => {
+      const shown = [...panes.values()].find((p) => p.chat.some((s) => chatKey([s]) === chatKey([source])));
+      if (shown) return shown.reveal(id);
+      revealing = { key: chatKey([source]), id };
+      saveSplits((splits) => [...splits, [source]]);
+    },
   }),
 );
 

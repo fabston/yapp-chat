@@ -110,13 +110,15 @@ channelSuggest($('openInput'), ctx);
 
 $('windowBtn').addEventListener('click', () => openChatWindow(pinned || pane?.chat));
 $('settingsBtn').addEventListener('click', () => chrome.runtime.openOptionsPage());
-// Mentions inbox: a mention opens its chat here, pinned.
+// Mentions inbox: a mention opens its chat here, pinned (the chat it came from, if it's still kept: merged too).
 $('settingsBtn').before(
   mentionsButton({
-    onOpen: (source) => {
-      pinned = [source];
+    ctx,
+    onOpen: (source, id) => {
+      pinned = [...panes.values()].find((p) => p.chat.some((s) => chatKey([s]) === chatKey([source])))?.chat || [source];
       renderMode();
       show(pinned);
+      pane.reveal(id);
     },
   }),
 );

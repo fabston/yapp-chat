@@ -24,6 +24,7 @@
       <a href="#appearance" data-icon="sliders">Appearance</a>
       <a href="#highlights" data-icon="at">Highlights</a>
       <a href="#hidden" data-icon="eye-off">Hidden</a>
+      <a href="#moderation" data-icon="shield">Moderation</a>
       <a href="#notifications" data-icon="bell">Notifications</a>
       <a href="#friends" data-icon="users">Friends</a>
       <a href="#emotes" data-icon="smile">Emotes</a>
@@ -34,7 +35,9 @@
     <main class="content">
       <div class="settings-search">
         <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
-        <input type="search" class="input" id="settingsSearch" placeholder="Search settings" aria-label="Search settings" autocomplete="off" spellcheck="false">
+        <input type="search" class="input" id="settingsSearch" placeholder="Search settings" aria-label="Search settings" aria-keyshortcuts="Control+F Meta+F /" autocomplete="off" spellcheck="false">
+        <!-- Its keys (options.js: ⌘ on a Mac); gone while there's a search. -->
+        <span class="search-keys" aria-hidden="true"><kbd id="searchKey">Ctrl F</kbd><kbd>/</kbd></span>
       </div>
       <p class="search-none" id="searchNone" role="status" hidden></p>
       <section class="panel" id="accounts" aria-labelledby="accounts-h">
@@ -115,6 +118,11 @@
               <span class="setting-desc">Someone's earlier messages in the channel, from public chat logs.</span></span>
             <span class="switch" aria-hidden="true"></span>
           </button>
+          <button type="button" class="setting-row" id="offerSimulcastRow" role="switch" aria-checked="false">
+            <span class="setting-text"><span class="setting-title">Offer to combine a streamer's chats</span>
+              <span class="setting-desc">When the streamer of a chat you open is live on Twitch, Kick or YouTube at the same time, a bar offers to show those chats in one.</span></span>
+            <span class="switch" aria-hidden="true"></span>
+          </button>
         </div>
       </section>
 
@@ -128,8 +136,8 @@
               <div class="segmented" id="themeChoices" role="group" aria-label="Theme"></div>
             </div>
     <div class="setting-row static">
-              <span class="setting-text"><span class="setting-title">Lines</span></span>
-              <div class="segmented" id="densityChoices" role="group" aria-label="Lines"></div>
+              <span class="setting-text"><span class="setting-title">Spacing</span></span>
+              <div class="segmented" id="densityChoices" role="group" aria-label="Spacing"></div>
             </div>
     <div class="setting-row static">
               <span class="setting-text"><span class="setting-title">Font</span></span>
@@ -144,7 +152,8 @@
               <div class="segmented" id="emoteSizeChoices" role="group" aria-label="Emote size"></div>
             </div>
     <button type="button" class="setting-row" id="timestampsRow" role="switch" aria-checked="false">
-              <span class="setting-text"><span class="setting-title">Show times</span></span>
+              <span class="setting-text"><span class="setting-title">Show times</span>
+                <span class="setting-desc">When each message came, before it.</span></span>
               <span class="switch" aria-hidden="true"></span>
             </button>
     <button type="button" class="setting-row" id="badgesRow" role="switch" aria-checked="false">
@@ -165,19 +174,26 @@
           </div>
           <!-- A small chat drawn with the settings above (options.js renderPreview). -->
           <div class="preview" role="group" aria-label="Preview" data-no-search>
-            <span class="preview-label">Preview</span>
-            <div class="pane preview-pane"><div class="pane-list" id="preview"></div></div>
+            <div class="pane preview-pane">
+              <span class="preview-label">Preview</span>
+              <div class="pane-list" id="preview"></div>
+            </div>
           </div>
         </div>
       </section>
 
       <section class="panel" id="highlights" aria-labelledby="highlights-h">
         <h2 id="highlights-h">Highlights</h2>
-        <p class="card-desc">Messages that mention you or one of your words stand out, and go to the 🔔 mentions inbox.</p>
+        <p class="card-desc">Messages with your name or one of your words stand out. Those with your name also go to the 🔔 mentions inbox.</p>
         <div class="card nested">
           <button type="button" class="setting-row" id="highlightNameRow" role="switch" aria-checked="false">
             <span class="setting-text"><span class="setting-title">Highlight my name</span>
               <span class="setting-desc">Your Twitch or Kick name, when you're signed in.</span></span>
+            <span class="switch" aria-hidden="true"></span>
+          </button>
+          <button type="button" class="setting-row" id="mentionWordsRow" role="switch" aria-checked="false">
+            <span class="setting-text"><span class="setting-title">Also collect highlight words in Mentions</span>
+              <span class="setting-desc">Messages with your words go to the inbox (and its notifications) too, not only those with your name.</span></span>
             <span class="switch" aria-hidden="true"></span>
           </button>
         </div>
@@ -234,6 +250,72 @@
         <div id="hideWordBuilder"></div>
       </section>
 
+      <section class="panel" id="moderation" aria-labelledby="moderation-h">
+        <h2 id="moderation-h">Moderation</h2>
+        <p class="card-desc">For the Twitch and Kick channels you moderate, and your own.</p>
+        <h3>Timeouts</h3>
+        <p class="card-desc">On a message's menu and the user card. The first is also on a message's buttons and the <kbd>T</kbd> key. Like <code>30s</code>, <code>10m</code>, <code>1h</code>, <code>1d</code> or <code>1w</code>.</p>
+        <form class="add-row" id="modTimeoutForm" novalidate>
+          <label class="visually-hidden" for="modTimeoutInput">Timeout length</label>
+          <input type="text" id="modTimeoutInput" class="input" placeholder="a length, like 10m" autocomplete="off" spellcheck="false">
+          <button type="submit" class="btn btn-primary">
+            <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>Add
+          </button>
+        </form>
+        <p class="form-error" id="modTimeoutError" role="alert"></p>
+        <ul class="item-list chip-list" id="modTimeoutList"></ul>
+        <h3>Reasons</h3>
+        <p class="card-desc">To pick in <em>Moderate…</em>, on a message's menu or the user card.</p>
+        <form class="add-row" id="modReasonForm" novalidate>
+          <label class="visually-hidden" for="modReasonInput">Reason</label>
+          <input type="text" id="modReasonInput" class="input" placeholder="a reason, like spam" maxlength="100" autocomplete="off">
+          <button type="submit" class="btn btn-primary">
+            <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>Add
+          </button>
+        </form>
+        <p class="form-error" id="modReasonError" role="alert"></p>
+        <ul class="item-list chip-list" id="modReasonList"></ul>
+        <h3>Quick actions</h3>
+        <div class="card nested">
+          <button type="button" class="setting-row" id="modButtonsRow" role="switch" aria-checked="false">
+            <span class="setting-text"><span class="setting-title">Mod buttons on every message</span>
+              <span class="setting-desc">Delete, timeout and ban before each name, not only on the message you point at.</span></span>
+            <span class="switch" aria-hidden="true"></span>
+          </button>
+          <button type="button" class="setting-row" id="modKeysRow" role="switch" aria-checked="false">
+            <span class="setting-text"><span class="setting-title">Keys</span>
+              <span class="setting-desc">On the message you point at: <kbd>D</kbd> deletes it, <kbd>T</kbd> times them out, <kbd>B</kbd> bans them.</span></span>
+            <span class="switch" aria-hidden="true"></span>
+          </button>
+          <button type="button" class="setting-row" id="modLogRow" role="switch" aria-checked="false">
+            <span class="setting-text"><span class="setting-title">Show what moderators do</span>
+              <span class="setting-desc">Who timed out or banned whom and why, chat mode changes and more, in the chat.</span></span>
+            <span class="switch" aria-hidden="true"></span>
+          </button>
+          <button type="button" class="setting-row" id="raidProtectRow" role="switch" aria-checked="false">
+            <span class="setting-text"><span class="setting-title">Raid protection</span>
+              <span class="setting-desc">When a raid of 20 or more comes in (Twitch): followers-only for 10 minutes, Shield Mode or a shoutout, in one click.</span></span>
+            <span class="switch" aria-hidden="true"></span>
+          </button>
+          <button type="button" class="setting-row" id="flagNewAccountsRow" role="switch" aria-checked="false">
+            <span class="setting-text"><span class="setting-title">Flag new accounts</span>
+              <span class="setting-desc">A tag on first-time chatters whose Twitch account is under a month old.</span></span>
+            <span class="switch" aria-hidden="true"></span>
+          </button>
+        </div>
+        <h3>Commands</h3>
+        <p class="card-desc">For moderators, in the message box: type <kbd>/</kbd> and they're suggested as you go; <code>/help</code> lists them in the chat.</p>
+        <!-- Folded (most people don't moderate); the search opens it for a command it finds (options.js searchSettings). -->
+        <details class="fold command-more">
+          <summary id="commandSummary">All commands</summary>
+          <div class="fold-body">
+            <p class="card-desc">Arguments in [brackets] can be left out.</p>
+            <!-- Filled from lib/commands.js (options.js renderCommands): a label and a card of commands per group. -->
+            <div id="commandList" hidden></div>
+          </div>
+        </details>
+      </section>
+
       <section class="panel" id="notifications" aria-labelledby="notifications-h">
         <h2 id="notifications-h">Notifications</h2>
         <div class="card nested">
@@ -243,14 +325,24 @@
             <span class="switch" aria-hidden="true"></span>
           </button>
         </div>
-        <div class="live-channels" id="liveChannels" hidden>
-          <div class="live-head">
-            <span class="live-count" id="liveCount" role="status"></span>
-            <button type="button" class="btn btn-ghost btn-sm" id="liveAllOn">All on</button>
-            <button type="button" class="btn btn-ghost btn-sm" id="liveAllOff">All off</button>
+        <!-- Folded: how many notify says enough until you want to choose (options.js renderLiveChannels). -->
+        <details class="fold live-channels" id="liveChannels" hidden>
+          <summary><span id="liveCount" role="status"></span></summary>
+          <div class="fold-body">
+            <div class="live-head">
+              <input class="input" id="liveFilter" type="search" placeholder="Find a channel" aria-label="Find a channel you follow" autocomplete="off" spellcheck="false">
+              <button type="button" class="btn btn-ghost btn-sm" id="liveAllOn">All on</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="liveAllOff">All off</button>
+            </div>
+            <ul class="item-list live-list" id="liveList" aria-label="Channels you follow"></ul>
           </div>
-          <input class="input" id="liveFilter" type="search" placeholder="Find a channel" aria-label="Find a channel you follow" autocomplete="off" spellcheck="false">
-          <ul class="item-list live-list" id="liveList" aria-label="Channels you follow"></ul>
+        </details>
+        <div class="card nested">
+          <button type="button" class="setting-row" id="mentionNotifyRow" role="switch" aria-checked="false">
+            <span class="setting-text"><span class="setting-title">Notify me of mentions</span>
+              <span class="setting-desc">A desktop notification for each mention in an open chat (what goes to the 🔔 inbox: see Highlights); click it to go to the message.</span></span>
+            <span class="switch" aria-hidden="true"></span>
+          </button>
         </div>
       </section>
 
@@ -301,17 +393,34 @@
         <h2 id="about-h">About</h2>
         <p class="card-desc">Click the toolbar icon to open chat beside the stream you're watching. The <svg class="icon inline-icon" aria-hidden="true"><use href="#i-columns"/></svg> button opens a window with several chats side by side.</p>
         <h3>Shortcuts</h3>
-        <dl class="shortcuts">
-          <dt><kbd>Ctrl</kbd>/<kbd>⌘</kbd> <kbd>F</kbd></dt><dd>Filter the chat you're in</dd>
-          <dt><kbd>Ctrl</kbd>/<kbd>⌘</kbd> <kbd>E</kbd></dt><dd>Emote picker (Enter picks the first match of a search)</dd>
-          <dt><kbd>Esc</kbd></dt><dd>Back to the newest messages; close a card or menu</dd>
-          <dt><kbd>Alt</kbd> <kbd>←</kbd> <kbd>→</kbd></dt><dd>Move between columns in the chat window</dd>
-          <dt><kbd>:lul</kbd></dt><dd>Suggest emotes</dd>
-          <dt><kbd>@na</kbd></dt><dd>Suggest people chatting here</dd>
-          <dt><kbd>Tab</kbd></dt><dd>Complete a name from a few letters</dd>
-          <dt><kbd>↑</kbd> <kbd>↓</kbd></dt><dd>Go through what you sent (in an empty message box)</dd>
-          <dt>Right-click</dt><dd>On a message (or ⋯ on its buttons): reply, mention, hide, friends, mod tools. On an emote in the picker: ★ it</dd>
-        </dl>
+        <!-- Ctrl and Alt read ⌘ and ⌥ on a Mac (options.js). -->
+        <p class="group-label" data-no-search>In chat</p>
+        <div class="card nested shortcut-card">
+          <div class="setting-row static shortcut"><span class="setting-text"><span class="setting-title">Filter the chat you're in</span></span><span class="keys"><kbd data-mod>Ctrl</kbd><kbd>F</kbd></span></div>
+          <div class="setting-row static shortcut"><span class="setting-text"><span class="setting-title">Emote picker (Enter picks the first match)</span></span><span class="keys"><kbd data-mod>Ctrl</kbd><kbd>E</kbd></span></div>
+          <div class="setting-row static shortcut"><span class="setting-text"><span class="setting-title">Back to the newest messages; close a card or menu</span></span><span class="keys"><kbd>Esc</kbd></span></div>
+          <div class="setting-row static shortcut"><span class="setting-text"><span class="setting-title">Next or previous column, in the chat window</span></span><span class="keys"><kbd data-alt>Alt</kbd><kbd>←</kbd><kbd>→</kbd></span></div>
+        </div>
+        <p class="group-label" data-no-search>Typing</p>
+        <div class="card nested shortcut-card">
+          <div class="setting-row static shortcut"><span class="setting-text"><span class="setting-title">Suggest emotes</span></span><span class="keys"><code class="typed">:lul</code></span></div>
+          <div class="setting-row static shortcut"><span class="setting-text"><span class="setting-title">Suggest people chatting here</span></span><span class="keys"><code class="typed">@na</code></span></div>
+          <div class="setting-row static shortcut"><span class="setting-text"><span class="setting-title">Commands, in a chat you moderate</span></span><span class="keys"><kbd>/</kbd></span></div>
+          <div class="setting-row static shortcut"><span class="setting-text"><span class="setting-title">Complete a name from a few letters</span></span><span class="keys"><kbd>Tab</kbd></span></div>
+          <div class="setting-row static shortcut"><span class="setting-text"><span class="setting-title">What you sent before, in an empty box</span></span><span class="keys"><kbd>↑</kbd><kbd>↓</kbd></span></div>
+        </div>
+        <p class="group-label" data-no-search>Mouse</p>
+        <div class="card nested shortcut-card">
+          <div class="setting-row static shortcut"><span class="setting-text"><span class="setting-title">A message's menu: reply, mention, hide, friends, mod tools (or ⋯ on its buttons)</span></span><span class="keys"><kbd>Right-click</kbd></span></div>
+          <div class="setting-row static shortcut"><span class="setting-text"><span class="setting-title">Star an emote in the picker, so it comes first</span></span><span class="keys"><kbd>Right-click</kbd></span></div>
+        </div>
+        <!-- Folded, as Moderation's commands: most people don't moderate. The search opens it for a match. -->
+        <details class="fold shortcut-fold">
+          <summary>For moderators: D, T and B on the message you point at</summary>
+            <div class="setting-row static shortcut"><span class="setting-text"><span class="setting-title">Delete it</span></span><span class="keys"><kbd>D</kbd></span></div>
+            <div class="setting-row static shortcut"><span class="setting-text"><span class="setting-title">Time them out, for your first length</span></span><span class="keys"><kbd>T</kbd></span></div>
+            <div class="setting-row static shortcut"><span class="setting-text"><span class="setting-title">Ban them (it asks first)</span></span><span class="keys"><kbd>B</kbd></span></div>
+        </details>
         <h3>Help and links</h3>
         <div class="about-links">
           <a class="about-link" href="https://yapp.chat/discord" target="_blank" rel="noopener noreferrer">
