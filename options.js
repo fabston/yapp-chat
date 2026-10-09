@@ -118,7 +118,11 @@ function render() {
     for (const btn of $(id).children) btn.setAttribute('aria-pressed', String(btn.dataset.value === settings[key]));
   }
   renderList('friendList', 'friends', 'No friends yet.', (login) => `Remove ${login} from friends`);
+  switchRow('holdAnywhereRow', settings.holdAnywhere);
   switchRow('foldRow', settings.foldRepeats);
+  // Similar messages fold only where repeats do.
+  $('foldSimilarRow').disabled = !settings.foldRepeats;
+  switchRow('foldSimilarRow', settings.foldSimilar && settings.foldRepeats);
   switchRow('hideCommandsRow', settings.hideCommands);
   switchRow('hideBotsRow', settings.hideBots);
 
@@ -507,7 +511,9 @@ $('friendForm').addEventListener('submit', async (e) => {
   if (!settings.friends.includes(login)) await saveSettings({ friends: [...settings.friends, login] });
   $('friendInput').value = '';
 });
+$('holdAnywhereRow').addEventListener('click', () => saveSettings({ holdAnywhere: !settings.holdAnywhere }));
 $('foldRow').addEventListener('click', () => saveSettings({ foldRepeats: !settings.foldRepeats }));
+$('foldSimilarRow').addEventListener('click', () => saveSettings({ foldSimilar: !settings.foldSimilar }));
 
 /* ---- Hidden ---- */
 

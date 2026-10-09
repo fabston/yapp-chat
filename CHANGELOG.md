@@ -2,6 +2,32 @@
 
 What changed in each version of Yapp Chat, newest first. Get it from the [Chrome Web Store](https://chromewebstore.google.com/detail/yapp-chat/ocebmcgmildjdidagnnifoegheabnpgd).
 
+## 1.0.13
+- Folding repeated messages, much better:
+  - It catches copypasta it used to miss: the same message with an invisible character added (as some chat apps do to get past Twitch's duplicate check), different punctuation, stretched letters ("deaddddd", "GOOOO"), a plural s, a word spelled out ("k e y"), the same word more or fewer times ("KEKW KEKW KEKW"), or one mistyped letter in a longer message ("all 3 are ther"). Numbers still count: "rank 1" isn't "rank 2".
+  - Repeats fold among a chat's earlier messages too, and a new repeat joins the earlier line.
+  - A message said again after a moderator deleted it gets its own line instead of disappearing into the struck-through one.
+  - A repeated message that mentions you counts once in your mentions and on the toolbar icon.
+  - Point at "×12" to see who sent it: the first eight names in their colours, and how many others; it keeps up as the count grows.
+  - The count gets louder as it grows, so big waves stand out: quiet from ×2, brighter from ×5, filled from ×20. It pops briefly as it grows (not with reduced motion).
+- New in Settings → Chat: *Fold similar messages* (off unless you turn it on), for busy chats:
+  - Messages that mostly say the same within 30 seconds (two or more words in common: "all 3 dead", "ALL 3 DED", "u got all 3") fold into one line, "×8 similar", with a dashed edge.
+  - Reaction waves too: once a word fills the chat (in 8 or more messages within 30 seconds, and at least a quarter of them, like "key" when everyone tells the streamer to craft it), short reactions with it (the word and at most one other: "rip LOL", "craft the key") fold into one line, also the ones from just before.
+  - Messages that say more stay apart ("kek is lol in orcish"), and so do a word only a few people share ("sums", "sum is right") and opposites ("I love this game", "I hate this game").
+  - The line shows the most-sent version in its plainest wording ("the key", not "the key!!!!!!!!"); point at the count for every version and who sent it ("213 messages · 7 versions", most sent first).
+- Holding the chat still, improved:
+  - In a busy chat, it no longer stays paused after you point at a name (it took the oldest lines going meanwhile for you scrolling up); it follows again once you move off.
+  - While it's held, or you've scrolled up to read, the oldest lines aren't dropped, so nothing moves under you (up to twice the usual 600).
+  - Moving from one name to the next no longer lets it jump in between: it waits half a second before following again.
+  - Pointing at "×N" holds it, and the count goes up where it is instead of the line jumping to the bottom from under the pointer.
+  - Pointing at a deleted (struck-through) message holds it, so you can read what it said.
+  - Selecting text holds it, so you can copy from a fast chat.
+  - New in Settings → Chat: *Hold the chat anywhere under the pointer* (off unless you turn it on). It holds while the pointer moves over the chat, and follows again once it rests for a moment.
+- Kick clips and videos get link previews like YouTube links and Twitch clips: point at a kick.com clip link for its picture, title, length, views and who clipped it, or at a past stream's link for its title, length, views and category. A deleted or private video shows none.
+- Subs, Super Chats, cheers and KICKs with a message name the person once, in the headline ("name resubscribed"); the message below no longer repeats the name. Announcements keep it, since their headline doesn't say who.
+- Things that only show something when you point at them (emotes, badges, channel pictures in merged chats, times, the "×N" count and chat modes) show the "?" cursor; names, links and replies, which you can click, keep the hand.
+- Tooltips near the top or bottom of a chat stay inside the window.
+
 ## 1.0.12
 - Loaded from source (*Load unpacked*), Yapp Chat now has the same ID as the Chrome Web Store version (`ocebmcgmildjdidagnnifoegheabnpgd`), so signing in to Twitch and Kick works there too.
 

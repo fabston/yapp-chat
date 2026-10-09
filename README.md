@@ -10,12 +10,13 @@ A free, open-source Chrome and Brave extension. No account needed, no tracking.
 ## ✨ What it does
 
 - 🪟 **Chat in the side panel.** Open a Twitch, Kick or YouTube stream and its chat sits right next to it. Each tab gets its own panel.
+- 🌊 **A busy chat you can actually read.** Copypasta folds into one line (`×47`), even when people add invisible characters or stretch their letters to get past Twitch's duplicate check. Turn on *Fold similar messages* and whole reaction waves fold too: "all 3 dead", "ALL 3 DED" and "u got all 3" become one line, `×38 similar`, with every version and who sent it one hover away.
 - 🧩 **Several chats at once.** Put chats side by side in their own window, or merge a few channels into one chat (even Twitch and YouTube together).
 - 😂 **Every emote.** Twitch, 7TV, BetterTTV and FrankerFaceZ emotes, with a picker, favourites and `:` suggestions as you type. Hover one for a big preview.
 - 🎨 **Paints and badges.** 7TV name paints and badges show up live, plus BetterTTV and FrankerFaceZ badges.
 - 🪪 **User cards.** Click a name to see their account age, followers, earlier names, timeouts and bans, and their chat logs, with search.
 - 🔔 **Mentions.** Messages with your name or your highlight words collect in one inbox, with a count on the toolbar icon.
-- 🧘 **A calmer chat.** Repeated spam folds into one line (`×12`), and you can hide bots, `!commands` or people you don't want to read.
+- 🧘 **A calmer chat.** Hide bots, `!commands` or people you don't want to read.
 - ⏸️ **It holds still.** The chat stops scrolling while you hover a name, read a reply or open a card, so nothing jumps away from you.
 - 🛡️ **Mod tools.** Delete and timeout with a click on the message, ban from its menu or the user card, on Twitch and Kick.
 - 📣 **Go-live alerts.** Optional desktop notifications when channels you follow go live.

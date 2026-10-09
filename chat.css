@@ -737,6 +737,11 @@ img.tip-preview {
   white-space: nowrap;
 }
 
+/* What only shows something on hover (no click): the "?" cursor says so. Names, links and replies keep the hand. */
+.pane-list :is(.emote-stack, .badge, .badge-pill, .msg-source, .fold-count, .ts) {
+  cursor: help;
+}
+
 /* The full message a reply answers. */
 .hover-tip[data-kind="reply"] {
   flex-direction: column;
@@ -1784,7 +1789,7 @@ img.tip-preview {
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  cursor: default;
+  cursor: help; /* hover: what the mode means */
 }
 
 .mode .icon {
@@ -1961,16 +1966,42 @@ img.tip-preview {
 
 /* ---- Folded repeats, row shading ---- */
 
-/* "×12": the same message sent again (lib/chat.js fold). */
+/*
+ * "×12": the same message sent again (lib/chat.js fold); it pops as it grows, and its tooltip says who sent it.
+ * Louder as it grows (data-level, by strength, not colour: yellow, orange and gold already mean things): quiet
+ * from 2, brighter from 5, filled from 20. "×9 similar" (different messages folded) has a dashed edge.
+ */
 .fold-count {
+  display: inline-block; /* for the pop's scale */
   margin-left: 6px;
   padding: 0 6px;
   font-size: 0.75em;
   font-weight: 700;
-  color: var(--text);
+  color: var(--muted);
   vertical-align: 1px;
   background: var(--surface-3);
+  border: 1px solid transparent;
   border-radius: 999px;
+}
+
+.fold-count[data-level="mid"] {
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.fold-count[data-level="high"] {
+  color: var(--bg);
+  background: var(--text);
+  border-color: var(--text);
+}
+
+.fold-count.similar {
+  border-style: dashed;
+  border-color: var(--border-strong);
+}
+
+.fold-count.similar[data-level="high"] {
+  border-color: var(--bg);
 }
 
 /* A repeated timeout: beside the pills, spaced like them. */
@@ -2140,6 +2171,49 @@ img.tip-preview {
   flex: 1;
   height: 1px;
   background: var(--danger-line);
+}
+
+/* Over "×12": how many times, then who sent it, wrapping under it (lib/chat.js showFoldTip). */
+.hover-tip[data-kind="fold"] {
+  flex-direction: column;
+  gap: 4px;
+  max-width: min(280px, calc(100vw - 16px));
+  font-size: 13px;
+}
+
+.hover-tip[data-kind="fold"] strong {
+  white-space: nowrap;
+}
+
+.tip-names {
+  line-height: 1.45;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.tip-name {
+  font-weight: 600;
+}
+
+/* "×9 similar": each version and who sent it, on one line when they fit. */
+.tip-variant {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 8px;
+  min-width: 0;
+}
+
+.tip-variant-text {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tip-variant .tip-names {
+  font-size: 12px;
 }
 
 /* When exactly a message was sent (over a name or timestamp). */
