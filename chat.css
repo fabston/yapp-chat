@@ -628,13 +628,80 @@
   white-space: nowrap;
 }
 
-/* The message it answers is still in the chat: click to go to it. */
-.reply-line.can-jump {
+/* A reply's quote: point at it for a preview of the conversation, click for all of it. */
+.reply-line {
+  cursor: pointer; /* click: the conversation */
+}
+
+.reply-line:hover .reply-body {
+  color: var(--text);
+}
+
+/* Emotes in the quote, at the quote's size. */
+.reply-body .emote {
+  height: 1.5em;
+  vertical-align: middle;
+}
+
+/* The message a reply answers, while you point at the reply. */
+.msg.replied {
+  background: var(--accent-soft);
+  box-shadow: inset 2px 0 var(--accent);
+}
+
+/* A conversation (lib/chat.js showThread): placed like the user card. */
+.thread-panel {
+  position: absolute;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  width: min(420px, calc(100% - 16px));
+  max-height: min(420px, calc(100% - 16px));
+  overflow: hidden;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px var(--shadow);
+}
+
+.thread-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 8px 8px 14px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.thread-count {
+  flex: 1;
+  color: var(--muted);
+}
+
+.thread-list {
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.thread-msg {
   cursor: pointer;
 }
 
-.reply-line.can-jump:hover .reply-body {
-  color: var(--text);
+.thread-msg:hover {
+  background: var(--hover);
+}
+
+.thread-msg.current {
+  background: var(--accent-soft);
+}
+
+.thread-gone {
+  color: var(--muted);
+  cursor: default;
+}
+
+.thread-note {
+  font-size: 0.85em;
 }
 
 .msg.flash {
@@ -750,10 +817,21 @@ img.tip-preview {
 }
 
 .tip-reply {
+  display: -webkit-box;
   margin: 0;
+  overflow: hidden;
   font-size: 13px;
   line-height: 1.5;
   overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2; /* a preview: two lines a message at most */
+}
+
+/* The reply you're pointing at, in the preview of its conversation. */
+.tip-reply.current {
+  padding-left: 8px;
+  margin-left: -10px;
+  border-left: 2px solid var(--accent);
 }
 
 .tip-reply .emote {
@@ -773,6 +851,13 @@ img.tip-preview {
   object-fit: cover;
   background: var(--surface-3);
   border-radius: var(--radius-sm);
+}
+
+/* A channel's picture (offline, or live with no stream picture yet). */
+.tip-thumb.round {
+  width: 72px;
+  aspect-ratio: 1;
+  border-radius: 50%;
 }
 
 .tip-link {
@@ -2193,6 +2278,15 @@ img.tip-preview {
 
 .tip-name {
   font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Its platform, in a chat merging Twitch, Kick and YouTube. */
+.tip-name .platform-tile {
+  width: 12px;
+  height: 12px;
+  margin-right: 3px;
+  vertical-align: -1px;
 }
 
 /* "×9 similar": each version and who sent it, on one line when they fit. */

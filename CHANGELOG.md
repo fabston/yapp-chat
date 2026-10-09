@@ -2,6 +2,43 @@
 
 What changed in each version of Yapp Chat, newest first. Get it from the [Chrome Web Store](https://chromewebstore.google.com/detail/yapp-chat/ocebmcgmildjdidagnnifoegheabnpgd).
 
+## 1.0.20
+- Settings → *About*: the help links (Discord, the website, the changelog, GitHub, the privacy policy) as cards with their icons.
+
+## 1.0.19
+- What's new in each version is now on the website too, at [yapp.chat/changelog](https://yapp.chat/changelog), linked under Settings → *About*.
+- A deleted message no longer gets the buttons over it when you point at it to read what it said (right-click still has them).
+
+## 1.0.18
+- Replies, improved:
+  - Click the quote above a reply for the whole conversation: the message it started with and every reply in the chat, in order, with their times; click one to go to it. One that started before you opened the chat shows its first message as quoted.
+  - The quote shows emotes, and the name in its chat colour, also once the message it answers has left the chat (from their chatting lately).
+  - Pointing at a reply makes the message it answers glow, if it's on screen.
+  - Pointing at a reply's quote previews its conversation: the message it started with and the replies up to that one (+N more); a click shows it all.
+
+## 1.0.17
+- Settings, reorganized: *Hidden* is its own section next to *Highlights* (bots and commands, people, words), with headings like the rest; *People* is now *Friends*.
+- Search settings: a box at the top shows only what matches as you type (press / to get there).
+- *Reset all settings* under *Privacy & data* (it asks once more first); sign-ins, notes and the chat window's chats stay.
+- A new dropdown, the same look as the rest of Yapp Chat in both themes, in place of the browser's own (the regex builder's *Where*); keys work as in a menu.
+- The shortcut list shows `:lul` and `@na` as one key each.
+
+## 1.0.16
+- Highlight words take regexes too, written between slashes (`/gg+/i`), next to plain words and phrases.
+- New in Settings → People → *Hidden*: hide messages with certain words, phrases or regexes (spoilers, spam).
+- *Build a regex*, under both lists: type the words, pick where they count (as whole words, anywhere, at the start, as the whole message), match case or not, stretched letters too (lol, LOOOOL), spam tricks too (look-alikes like fr3e, letters spaced or dotted like f.r.e.e, no space like freesub); see the regex it makes, try it on a message (what matches is marked), and add it. A regex that doesn't work is refused with the reason. Regexes in the lists and the builder show their parts in colour, as regex tools do.
+- A message you hid (by its sender or its words) no longer lands in your mentions or the toolbar count.
+
+## 1.0.15
+- Go-live notifications, channel by channel: under the switch in Settings → *Notifications*, every Twitch channel you follow is listed with its own switch, all on at first, with a search and *All on* / *All off*. Channels you follow later are on too (or off, after *All off*). A notification has a *Turn off for this channel* button.
+
+## 1.0.14
+- More link previews: Twitch videos (past broadcasts, highlights and uploads: title, length, views, category) and channel links on Twitch and Kick (live: the stream's picture, title, viewers and game; offline: the channel's picture, followers and last game).
+- A preview picture that won't load is left out instead of showing as broken.
+- Laughing folds, however it's typed: "HAHAHAHA", "ahahaha", "Hahahahahah", "AHHAAHAHAH", "bahahaha", "hehehe" are one message, "×12", and so are "LMAOAOAO" and "LMFAOOOO", "lolol" and "lol", "xddd" and "xd". With *Fold similar messages*, mixed laughs ("hahaha lmfao") join in too.
+- In a merged chat, the same message folds across its channels: a simulcast's "W" from Twitch, Kick and YouTube is one line, "W ×77", and reaction waves fold across them too. Pointing at the count shows each sender with their platform (the same name on another platform counts as someone else). Timeouts and bans still fold only within their channel.
+- A timeout on Twitch and one on Kick at the same moment, for people with the same user id, both show (one was taken for a copy of the other).
+
 ## 1.0.13
 - Folding repeated messages, much better:
   - It catches copypasta it used to miss: the same message with an invisible character added (as some chat apps do to get past Twitch's duplicate check), different punctuation, stretched letters ("deaddddd", "GOOOO"), a plural s, a word spelled out ("k e y"), the same word more or fewer times ("KEKW KEKW KEKW"), or one mistyped letter in a longer message ("all 3 are ther"). Numbers still count: "rank 1" isn't "rank 2".

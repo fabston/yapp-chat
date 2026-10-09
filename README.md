@@ -10,16 +10,17 @@ A free, open-source Chrome and Brave extension. No account needed, no tracking.
 ## ✨ What it does
 
 - 🪟 **Chat in the side panel.** Open a Twitch, Kick or YouTube stream and its chat sits right next to it. Each tab gets its own panel.
-- 🌊 **A busy chat you can actually read.** Copypasta folds into one line (`×47`), even when people add invisible characters or stretch their letters to get past Twitch's duplicate check. Turn on *Fold similar messages* and whole reaction waves fold too: "all 3 dead", "ALL 3 DED" and "u got all 3" become one line, `×38 similar`, with every version and who sent it one hover away.
+- 🌊 **A busy chat you can actually read.** Copypasta folds into one line (`×47`), even when people add invisible characters or stretch their letters to get past Twitch's duplicate check. Turn on *Fold similar messages* and whole reaction waves fold too: "all 3 dead", "ALL 3 DED" and "u got all 3" become one line, `×38 similar`, with every version and who sent it one hover away. In a merged chat it folds across platforms: a simulcast's "W" from Twitch, Kick and YouTube is one line.
 - 🧩 **Several chats at once.** Put chats side by side in their own window, or merge a few channels into one chat (even Twitch and YouTube together).
 - 😂 **Every emote.** Twitch, 7TV, BetterTTV and FrankerFaceZ emotes, with a picker, favourites and `:` suggestions as you type. Hover one for a big preview.
 - 🎨 **Paints and badges.** 7TV name paints and badges show up live, plus BetterTTV and FrankerFaceZ badges.
 - 🪪 **User cards.** Click a name to see their account age, followers, earlier names, timeouts and bans, and their chat logs, with search.
-- 🔔 **Mentions.** Messages with your name or your highlight words collect in one inbox, with a count on the toolbar icon.
-- 🧘 **A calmer chat.** Hide bots, `!commands` or people you don't want to read.
+- 🔔 **Mentions.** Messages with your name or your highlight words (or a regex) collect in one inbox, with a count on the toolbar icon.
+- 🧘 **A calmer chat.** Hide bots, `!commands`, people you don't want to read, or messages with certain words. Highlights and hidden words take regexes too, with a small builder to make them.
 - ⏸️ **It holds still.** The chat stops scrolling while you hover a name, read a reply or open a card, so nothing jumps away from you.
+- 💬 **Follow a conversation.** Click a reply for the whole back-and-forth in one place, emotes and all, and jump to any message in it.
 - 🛡️ **Mod tools.** Delete and timeout with a click on the message, ban from its menu or the user card, on Twitch and Kick.
-- 📣 **Go-live alerts.** Optional desktop notifications when channels you follow go live.
+- 📣 **Go-live alerts.** Optional desktop notifications when channels you follow go live: all of them, or just the ones you pick.
 - 🌗 **Your look.** Dark or light, compact or comfortable, and your choice of font and emote size.
 
 
@@ -86,7 +87,7 @@ No build step: the files here are exactly what the browser runs.
 
 ## 📜 What's new
 
-Every version's changes are in [CHANGELOG.md](CHANGELOG.md).
+Every version's changes are in [CHANGELOG.md](CHANGELOG.md), and at [yapp.chat/changelog](https://yapp.chat/changelog).
 
 ## 💬 Help and ideas
 

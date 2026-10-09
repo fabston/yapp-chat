@@ -379,6 +379,178 @@ code {
   border-bottom: none;
 }
 
+/* Under a word list: why a regex wasn't taken. */
+.form-error {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--danger);
+}
+
+.form-error:empty {
+  display: none;
+}
+
+/* "Build a regex" (options.js patternBuilder): fields, the regex it makes, and a message to try it on. */
+.pattern-builder {
+  margin-top: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.pattern-builder summary {
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.pattern-builder[open] summary {
+  color: var(--text);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.pb-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr); /* shrinks with a narrow page (inputs don't push it wider) */
+  gap: 10px;
+  padding: 12px;
+}
+
+.pb-field {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.pb-field .input {
+  width: 100%;
+  min-width: 0;
+}
+
+.pb-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.pb-hint {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.pb-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.pb-make {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pb-out {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px;
+  font-family: var(--mono);
+  font-size: 13px;
+  overflow-wrap: anywhere; /* a long one wraps (a narrow page) */
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.pb-result {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.pb-result:empty {
+  display: none;
+}
+
+.pb-result.hit {
+  color: var(--text);
+}
+
+.pb-result mark {
+  padding: 0 2px;
+  color: var(--on-accent);
+  background: var(--accent-fill);
+  border-radius: 3px;
+}
+
+/* Settings → Notifications: the channels you follow, each with its switch. */
+.live-channels {
+  margin-top: 14px;
+}
+
+.live-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin-bottom: 10px;
+}
+
+.live-count {
+  flex: 1;
+  min-width: 12em;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.live-list {
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.live-list li {
+  padding: 0;
+  font-family: inherit;
+}
+
+.live-channel {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--text);
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.live-channel:hover {
+  background: var(--hover);
+}
+
+.live-pic {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  background: var(--surface-3);
+  border-radius: 50%;
+}
+
+.live-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .account {
   display: flex;
   align-items: center;
@@ -482,17 +654,74 @@ button.setting-row:disabled .switch {
   opacity: 0.45;
 }
 
-/* About: where to get help, and the site. */
+/* About: where to get help, and the site. A card each: its mark, what it is, and that it opens a new tab. */
 .about-links {
-  margin: 8px 0 0;
-  padding-left: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.about-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 10px 12px;
+  color: var(--text);
+  text-decoration: none;
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.12s, background 0.12s;
+}
+
+.about-link:hover {
+  background: var(--hover);
+  border-color: var(--border);
+}
+
+.about-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: var(--radius-sm);
+}
+
+.about-icon .icon {
+  width: 18px;
+  height: 18px;
+}
+
+.about-text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.about-text span {
+  overflow: hidden;
   color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.about-links li + li {
-  margin-top: 4px;
+.about-go {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--muted);
+  opacity: 0;
+  transition: opacity 0.12s;
 }
 
-.about-links a {
-  color: var(--link);
+.about-link:hover .about-go,
+.about-link:focus-visible .about-go {
+  opacity: 1;
 }

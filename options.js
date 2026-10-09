@@ -1,14 +1,14 @@
 /*
- * Settings page: sections in a sidebar (Accounts, Chat, Appearance with a live preview, Highlights,
- * Notifications, People, Emotes, Privacy & data, About).
+ * Settings page: sections in a sidebar (Accounts, Chat, Appearance with a live preview, Highlights, Hidden,
+ * Notifications, Friends, Emotes, Privacy & data, About), and a search over them.
  */
 
 import { icon } from './lib/icons.js';
-import { backupText, CHAT_FONTS, clearNotes, COMMON_BOTS, EMOTE_SIZES, FONT_SIZES, isNotesKey, loadKickAuth, loadNotes, loadSettings, loadTwitchAuth, readBackup, saveKickAuth, saveNotes, saveSettings, saveTwitchAuth } from './lib/settings.js';
+import { backupText, CHAT_FONTS, clearNotes, COMMON_BOTS, DEFAULTS, EMOTE_SIZES, FONT_SIZES, isNotesKey, liveExceptWith, loadKickAuth, loadNotes, loadSettings, loadTwitchAuth, notifiesFor, readBackup, saveKickAuth, saveNotes, saveSettings, saveTwitchAuth } from './lib/settings.js';
 import { kickPicture, kickSignIn, kickSignOut } from './lib/kick.js';
-import { readableColor, setNameTheme } from './lib/format.js';
-import { freshTwitchAuth, twitchProfile, twitchSignIn, twitchSignOut, validateToken } from './lib/twitch.js';
-import { el, platformBadge } from './lib/ui.js';
+import { entryRegex, patternFor, readableColor, setNameTheme } from './lib/format.js';
+import { freshTwitchAuth, twitchFollowedChannels, twitchProfile, twitchSignIn, twitchSignOut, validateToken } from './lib/twitch.js';
+import { dropdown, el, platformBadge } from './lib/ui.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -72,11 +72,116 @@ function renderPictures() {
   }
 }
 
+/* ---- Live notifications: which channels ---- */
+
+let followed = null; // the channels you follow, asked once the list first shows: Promise<[{ login, name, avatar }]>
+const liveRows = new Map(); // login → its switch
+
+/** Under "Notify when…": every channel you follow with its own switch (all on, but those you turn off). */
+function renderLiveChannels() {
+  const shown = settings.liveNotify && Boolean(auth.token);
+  $('liveChannels').hidden = !shown;
+  if (!shown) return;
+  if (!followed) {
+    $('liveCount').textContent = 'Loading the channels you follow…';
+    const asked = (followed = twitchFollowedChannels(auth));
+    // Only if it's still the one asked for (not another account's, signed in meanwhile).
+    asked.then(
+      (channels) => asked === followed && drawLiveChannels(channels),
+      (error) => {
+        if (asked !== followed) return;
+        followed = null; // asked again next time
+        $('liveCount').textContent = error.status === 401 ? 'Sign in to Twitch again to choose channels (Accounts, above).' : "Couldn't load the channels you follow. Try again later.";
+      },
+    );
+  } else {
+    followed.then(showLiveChoices, () => {});
+  }
+}
+
+function drawLiveChannels(channels) {
+  liveRows.clear();
+  $('liveList').replaceChildren(
+    ...channels.map(({ login, name, avatar }) => {
+      const row = el('button', 'live-channel');
+      row.type = 'button';
+      row.setAttribute('role', 'switch');
+      row.dataset.find = `${login} ${name.toLowerCase()}`;
+      const pic = el('img', 'live-pic');
+      pic.alt = '';
+      pic.loading = 'lazy';
+      if (avatar) pic.src = avatar;
+      const toggle = el('span', 'switch');
+      toggle.setAttribute('aria-hidden', 'true');
+      row.append(pic, el('span', 'live-name', name), toggle);
+      row.addEventListener('click', () => saveSettings({ liveExcept: liveExceptWith(settings, login, !notifiesFor(settings, login)) }));
+      liveRows.set(login, row);
+      const li = el('li');
+      li.append(row);
+      return li;
+    }),
+  );
+  showLiveChoices(channels);
+}
+
+/** Each channel's switch, how many notify, and the search. */
+function showLiveChoices(channels) {
+  for (const [login, row] of liveRows) row.setAttribute('aria-checked', String(notifiesFor(settings, login)));
+  const on = channels.filter((c) => notifiesFor(settings, c.login)).length;
+  $('liveCount').textContent = channels.length ? `Notifying for ${on} of the ${channels.length} channel${channels.length === 1 ? '' : 's'} you follow` : "You don't follow any channels on Twitch yet.";
+  filterLiveChannels();
+}
+
+function filterLiveChannels() {
+  const term = $('liveFilter').value.trim().toLowerCase();
+  for (const row of liveRows.values()) row.parentElement.hidden = Boolean(term) && !row.dataset.find.includes(term);
+}
+
+$('liveFilter').addEventListener('input', filterLiveChannels);
+$('liveAllOn').addEventListener('click', () => saveSettings({ liveAll: true, liveExcept: [] }));
+$('liveAllOff').addEventListener('click', () => saveSettings({ liveAll: false, liveExcept: [] }));
+
+/**
+ * An entry as shown in a list or the regex builder: a /regex/ with its parts coloured as regex tools do (escapes,
+ * character classes, quantifiers, groups, alternatives, anchors; the slashes and flags quiet); anything else as text.
+ */
+function entryView(entry) {
+  let re = null;
+  try {
+    re = entryRegex(entry);
+  } catch {
+    // a broken one (from an old backup): as text
+  }
+  if (!re) return document.createTextNode(entry);
+  const code = el('code', 'rx');
+  const part = (kind, text) => code.append(kind ? el('span', `rx-${kind}`, text) : text);
+  const src = re.source;
+  part('delim', '/');
+  for (let i = 0; i < src.length; ) {
+    const rest = src.slice(i);
+    const quant = /^(?:[*+?]|\{\d+(?:,\d*)?\})\??/.exec(rest)?.[0];
+    const token =
+      (rest[0] === '\\' && ['escape', rest.slice(0, 2)]) ||
+      (rest[0] === '[' && ['class', /^\[\^?\]?(?:\\.|[^\]\\])*\]?/.exec(rest)[0]]) ||
+      (rest[0] === '(' && ['group', /^\((?:\?(?:[:=!]|<[=!]|<\w+>))?/.exec(rest)[0]]) ||
+      (rest[0] === ')' && ['group', ')']) ||
+      (quant && ['quant', quant]) ||
+      (rest[0] === '|' && ['alt', '|']) ||
+      ('^$'.includes(rest[0]) && ['anchor', rest[0]]) ||
+      (rest[0] === '.' && ['escape', '.']) || ['', /^[^\\[()*+?{|^$.]+/.exec(rest)?.[0] || rest[0]];
+    part(...token);
+    i += token[1].length;
+  }
+  part('delim', '/');
+  if (re.flags) part('flags', re.flags);
+  return code;
+}
+
 /** A list of names or words from settings[key], each with a ✕ that removes it, or `empty` when there are none. */
 function renderList(id, key, empty, removeLabel) {
   const items = settings[key].map((value) => {
     const li = document.createElement('li');
-    li.textContent = value;
+    li.append(entryView(value));
     const remove = document.createElement('button');
     remove.type = 'button';
     remove.className = 'btn btn-ghost btn-icon';
@@ -110,10 +215,12 @@ function render() {
   // Live notifications ask Twitch which channels you follow: off, and saying so, until you're signed in.
   $('liveNotifyRow').disabled = !auth.token;
   switchRow('liveNotifyRow', settings.liveNotify && Boolean(auth.token));
-  $('liveNotifyDesc').textContent = auth.token ? 'A desktop notification; click it to open the stream.' : 'Sign in to Twitch first (Accounts, above).';
+  $('liveNotifyDesc').textContent = auth.token ? 'A desktop notification; click it to open the stream. For all of them, or the ones you choose below.' : 'Sign in to Twitch first (Accounts, above).';
+  renderLiveChannels();
   applyTheme();
   renderPreview();
   renderData();
+  searchSettings(); // what was just drawn, filtered as the search says
   for (const [id, key] of [['themeChoices', 'theme'], ['densityChoices', 'density'], ['fontChoices', 'chatFont']]) {
     for (const btn of $(id).children) btn.setAttribute('aria-pressed', String(btn.dataset.value === settings[key]));
   }
@@ -128,6 +235,7 @@ function render() {
 
   renderList('hiddenList', 'hiddenUsers', 'No one hidden.', (login) => `Show messages from ${login} again`);
   renderList('wordList', 'highlightWords', 'No words yet.', (word) => `Stop highlighting ${word}`);
+  renderList('hiddenWordList', 'hiddenWords', 'No words yet.', (word) => `Stop hiding ${word}`);
 
   $('emoteRows').replaceChildren(
     ...EMOTE_SETS.map(([key, name, site]) => {
@@ -371,6 +479,88 @@ async function renderData() {
   );
 }
 
+/* ---- Search: only the settings that match show ---- */
+
+/** An element's text without its switch and choice rows (they're matched one by one), nor the preview's chat. */
+function ownText(node) {
+  const copy = node.cloneNode(true);
+  for (const part of copy.querySelectorAll('.setting-row, [data-no-search]')) part.remove();
+  return copy.textContent.toLowerCase();
+}
+
+/**
+ * Show the settings that match the search, in blocks: a section's heading and what's under each of its h3s. A
+ * block whose own text matches shows whole (a list, its form); otherwise only its matching rows, in their cards.
+ */
+function searchSettings() {
+  const term = $('settingsSearch').value.trim().toLowerCase();
+  for (const node of document.querySelectorAll('.search-out')) node.classList.remove('search-out');
+  $('searchNone').hidden = true;
+  if (!term) return;
+  let found = 0;
+  for (const section of document.querySelectorAll('section.panel')) {
+    const heading = section.querySelector('h2');
+    if (heading.textContent.toLowerCase().includes(term)) {
+      found++;
+      continue;
+    }
+    // Its blocks: what comes before the first h3, then each h3 with what follows it.
+    const blocks = [[]];
+    for (const child of section.children) {
+      if (child === heading) continue;
+      if (child.tagName === 'H3') blocks.push([]);
+      blocks.at(-1).push(child);
+    }
+    let shown = 0;
+    for (const block of blocks.filter((b) => b.length)) {
+      if (block.some((node) => ownText(node).includes(term))) {
+        shown++;
+        continue;
+      }
+      const rows = block.flatMap((node) => [...node.querySelectorAll('.setting-row')]);
+      const hits = rows.filter((row) => row.textContent.toLowerCase().includes(term));
+      for (const row of rows) row.classList.toggle('search-out', !hits.includes(row));
+      for (const node of block) node.classList.toggle('search-out', !hits.some((row) => node.contains(row)));
+      if (hits.length) shown++;
+    }
+    section.classList.toggle('search-out', !shown);
+    if (shown) found++;
+  }
+  for (const link of document.querySelectorAll('.nav a')) link.classList.toggle('search-out', $(link.hash.slice(1)).classList.contains('search-out'));
+  $('searchNone').hidden = Boolean(found);
+  $('searchNone').textContent = `No settings match "${$('settingsSearch').value.trim()}".`;
+}
+
+$('settingsSearch').addEventListener('input', searchSettings);
+// "/" anywhere but a text box: to the search (as on many sites).
+document.addEventListener('keydown', (e) => {
+  if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey || e.target.closest?.('input, textarea, select, [contenteditable]')) return;
+  e.preventDefault();
+  $('settingsSearch').focus();
+});
+
+/* ---- Reset: every setting back to how Yapp Chat starts (not sign-ins, notes or the chat window's chats) ---- */
+
+let resetAsked = 0; // the timer that takes "Sure?" back
+
+$('resetBtn').addEventListener('click', async () => {
+  const button = $('resetBtn');
+  const ask = (sure) => {
+    button.classList.toggle('sure', sure);
+    button.textContent = sure ? 'Sure? Reset' : 'Reset';
+  };
+  clearTimeout(resetAsked);
+  // The first click asks; a second within a few seconds resets.
+  if (!button.classList.contains('sure')) {
+    ask(true);
+    resetAsked = setTimeout(() => ask(false), 4000);
+    return;
+  }
+  ask(false);
+  await chrome.storage.sync.remove(Object.keys(DEFAULTS).filter((key) => key !== 'splits'));
+  showStatus('resetStatus', 'Your settings are back to how Yapp Chat starts.', true);
+});
+
 /* ---- Backup: settings, friends, notes and emote history to a file and back ---- */
 
 const setBackupStatus = (text, ok = true) => showStatus('backupStatus', text, ok);
@@ -528,15 +718,105 @@ $('hideForm').addEventListener('submit', async (e) => {
   $('hideInput').value = '';
 });
 
-$('wordForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const word = $('wordInput').value.trim();
-  if (!word) return;
-  if (!settings.highlightWords.some((w) => w.toLowerCase() === word.toLowerCase())) {
-    await saveSettings({ highlightWords: [...settings.highlightWords, word] });
+/* ---- Highlight and hide words: words, phrases or /regexes/ ---- */
+
+/** Add a word, phrase or /regex/ to settings[key]; false (saying why under its form, errorId) for a broken regex. */
+async function addEntry(key, entry, errorId) {
+  if (entry.length > 200) {
+    $(errorId).textContent = 'At most 200 characters.';
+    return false;
   }
-  $('wordInput').value = '';
-});
+  try {
+    entryRegex(entry);
+  } catch (error) {
+    $(errorId).textContent = `That regex doesn't work: ${error.message.replace(/^Invalid regular expression: /, '')}`;
+    return false;
+  }
+  $(errorId).textContent = '';
+  // Words once in any case; a regex as written (/A/ and /a/ differ).
+  const same = (w) => (entryRegex(entry) ? w === entry : w.toLowerCase() === entry.toLowerCase());
+  if (!settings[key].some(same)) await saveSettings({ [key]: [...settings[key], entry] });
+  return true;
+}
+
+for (const [form, input, key, error] of [['wordForm', 'wordInput', 'highlightWords', 'wordError'], ['hideWordForm', 'hideWordInput', 'hiddenWords', 'hideWordError']]) {
+  $(form).addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const entry = $(input).value.trim();
+    if (entry && (await addEntry(key, entry, error))) $(input).value = '';
+  });
+  $(input).addEventListener('input', () => ($(error).textContent = ''));
+}
+
+/**
+ * "Build a regex": one from words without writing it. Which words, where they count, case, stretched letters and
+ * spam tricks; the regex it makes (coloured); a message to try it on (what matches marked); Add puts it in
+ * settings[key], a broken one refused under errorId.
+ */
+function patternBuilder(key, errorId) {
+  const field = (label, control, hint) => {
+    const wrap = el('label', 'pb-field');
+    wrap.append(el('span', 'pb-label', label), control);
+    if (hint) wrap.append(el('span', 'pb-hint', hint));
+    return wrap;
+  };
+  const check = (label) => {
+    const wrap = el('label', 'pb-check');
+    const box = el('input');
+    box.type = 'checkbox';
+    wrap.append(box, label);
+    return [wrap, box];
+  };
+  const words = Object.assign(el('input', 'input'), { placeholder: 'giveaway, free sub', spellcheck: false, autocomplete: 'off' });
+  const places = [['words', 'As whole words'], ['anywhere', 'Anywhere, also inside words'], ['start', 'At the start of the message'], ['whole', 'As the whole message']];
+  const where = dropdown(places, 'words', () => update(), 'Where');
+  const [caseLabel, matchCase] = check('Match case');
+  const [stretchLabel, stretched] = check('Letters stretched too (lol, LOOOOL)');
+  const [tricksLabel, tricks] = check('Spam tricks too (fr3e, f.r.e.e, freesub)');
+  const out = el('code', 'pb-out');
+  const sample = Object.assign(el('input', 'input'), { placeholder: 'Type a message to try it', spellcheck: false, autocomplete: 'off' });
+  const result = el('p', 'pb-result');
+  result.setAttribute('aria-live', 'polite');
+  const add = el('button', 'btn btn-primary btn-sm', 'Add');
+  add.type = 'button';
+
+  const pattern = () => patternFor({ words: words.value.split(','), where: where.value, matchCase: matchCase.checked, stretched: stretched.checked, tricks: tricks.checked });
+  const update = () => {
+    const entry = pattern();
+    out.replaceChildren(entry ? entryView(entry) : 'Type a word above');
+    add.disabled = !entry;
+    result.replaceChildren();
+    result.className = 'pb-result';
+    if (!entry || !sample.value) return;
+    const found = entryRegex(entry).exec(sample.value);
+    if (!found) return result.replaceChildren('No match');
+    // The message with what matched marked.
+    result.classList.add('hit');
+    const at = found.index;
+    result.append('Matches: ', sample.value.slice(0, at), el('mark', '', found[0]), sample.value.slice(at + found[0].length));
+  };
+  for (const control of [words, matchCase, stretched, tricks, sample]) control.addEventListener('input', update);
+  add.addEventListener('click', async () => {
+    if (await addEntry(key, pattern(), errorId)) {
+      words.value = '';
+      update();
+    }
+  });
+  update();
+
+  const box = el('details', 'pattern-builder');
+  const body = el('div', 'pb-body');
+  const tryRow = el('div', 'pb-try');
+  tryRow.append(field('Try it', sample), result);
+  const outRow = el('div', 'pb-make');
+  outRow.append(out, add);
+  body.append(field('Words', words, 'Any of these; commas between.'), field('Where', where), caseLabel, stretchLabel, tricksLabel, outRow, tryRow);
+  box.append(el('summary', '', 'Build a regex'), body);
+  return box;
+}
+
+$('wordBuilder').append(patternBuilder('highlightWords', 'wordError'));
+$('hideWordBuilder').append(patternBuilder('hiddenWords', 'hideWordError'));
 
 $('sizeChoices').replaceChildren(
   ...Object.entries(FONT_SIZES).map(([label, size]) => {
@@ -565,7 +845,9 @@ chrome.storage.onChanged.addListener(async (changes, area) => {
   if (area === 'session' || (area === 'local' && !signIns) || (area === 'sync' && Object.keys(changes).every(isNotesKey))) return renderData();
   if (area === 'sync') settings = await loadSettings();
   if (signIns && changes.twitchAuth) {
+    const before = auth.userId;
     auth = await loadTwitchAuth();
+    if (auth.userId !== before) followed = null; // another account follows other channels (not a renewed token)
     checkScopes();
   }
   if (signIns && changes.kickAuth) kickAuth = await loadKickAuth();

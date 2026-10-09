@@ -4,7 +4,7 @@
 // on other pages. Everything else runs in the side panel and chat window.
 
 import { formatCount } from './lib/format.js';
-import { loadNotes, loadSettings, loadTwitchAuth, saveNotes } from './lib/settings.js';
+import { liveExceptWith, loadNotes, loadSettings, loadTwitchAuth, notifiesFor, saveNotes, saveSettings } from './lib/settings.js';
 import { sourceFromUrl } from './lib/sources.js';
 import { kickLiveInfo } from './lib/kick.js';
 import { twitchFollowedLive, twitchLiveInfo } from './lib/twitch.js';
@@ -69,7 +69,7 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
   }
 });
 
-/* ---- Live notifications (Settings → Notify when channels I follow go live) ---- */
+/* ---- Live notifications (Settings → Notify when channels I follow go live, for all or the ones chosen there) ---- */
 
 /** A picture for a notification: it has to be a data: URL (or one of ours). */
 async function pictureFor(url) {
@@ -83,7 +83,7 @@ async function pictureFor(url) {
   }
 }
 
-/** Every 2 minutes: the channels you follow that are live; a notification for each that wasn't last time. */
+/** Every 2 minutes: the channels you follow that are live; a notification for each that wasn't last time (and notifies). */
 async function checkLive() {
   const [settings, auth] = await Promise.all([loadSettings(), loadTwitchAuth()]);
   if (!settings.liveNotify || !auth.token) return;
@@ -92,12 +92,13 @@ async function checkLive() {
   const { liveSeen } = await chrome.storage.session.get('liveSeen');
   // The first check only remembers who's live (no flood of notifications when you switch it on).
   if (liveSeen) {
-    for (const channel of live.filter((c) => !liveSeen.includes(c.login))) {
+    for (const channel of live.filter((c) => !liveSeen.includes(c.login) && notifiesFor(settings, c.login))) {
       chrome.notifications.create(`live:${channel.login}`, {
         type: 'basic',
         iconUrl: channel.avatar ? await pictureFor(channel.avatar) : 'icons/icon128.png',
         title: `${channel.name} is live`,
         message: [channel.game, `${formatCount(channel.viewers)} watching`].filter(Boolean).join(' · '),
+        buttons: [{ title: 'Turn off for this channel' }],
       });
     }
   }
@@ -122,6 +123,13 @@ chrome.notifications.onClicked.addListener((id) => {
   if (!id.startsWith('live:')) return;
   chrome.tabs.create({ url: `https://www.twitch.tv/${id.slice(5)}` });
   chrome.notifications.clear(id);
+});
+// Its one button: no more notifications for that channel (Settings → Notifications turns it on again).
+chrome.notifications.onButtonClicked.addListener(async (id) => {
+  if (!id.startsWith('live:')) return;
+  chrome.notifications.clear(id);
+  const settings = await loadSettings();
+  await saveSettings({ liveExcept: liveExceptWith(settings, id.slice(5), false) });
 });
 scheduleLive();
 

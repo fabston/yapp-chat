@@ -326,6 +326,162 @@ button.setting-row:hover {
   color: var(--muted); /* 4.5:1+ on --bg, in both themes */
 }
 
+/* A /regex/ with its parts coloured as regex tools do (Settings' word lists and builder: options.js entryView; the website). */
+.rx {
+  font-family: var(--mono);
+  overflow-wrap: anywhere;
+}
+
+.rx-delim,
+.rx-flags {
+  color: var(--muted);
+}
+
+.rx-escape {
+  color: var(--link);
+}
+
+.rx-class {
+  color: var(--label);
+}
+
+.rx-quant {
+  color: var(--warn);
+}
+
+.rx-group,
+.rx-alt {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.rx-anchor {
+  color: var(--danger);
+}
+
+/* Search settings (options.js searchSettings): at the top; what doesn't match goes. */
+.settings-search {
+  position: relative;
+  margin-bottom: 8px;
+}
+
+.settings-search .icon {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  width: 16px;
+  height: 16px;
+  color: var(--muted);
+  translate: 0 -50%;
+  pointer-events: none;
+}
+
+.settings-search .input {
+  width: 100%;
+  padding-left: 36px;
+}
+
+.search-out {
+  display: none !important;
+}
+
+.search-none {
+  margin: 24px 0;
+  color: var(--muted);
+}
+
+/* Reset: its second click resets. */
+#resetBtn.sure {
+  color: var(--danger);
+  border-color: var(--danger-line);
+}
+
+/* A dropdown (lib/ui.js dropdown): a button like an input, opening a list like the chat's menus. */
+.dropdown {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  padding: 7px 10px;
+  font: 13px/1.4 var(--font);
+  color: var(--text);
+  text-align: left;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.dropdown:hover {
+  border-color: var(--border-strong);
+}
+
+.dropdown:focus-visible,
+.dropdown[aria-expanded="true"] {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.dropdown-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropdown .icon {
+  width: 14px;
+  height: 14px;
+  color: var(--muted);
+  transition: rotate 0.15s;
+}
+
+.dropdown[aria-expanded="true"] .icon {
+  rotate: 180deg;
+}
+
+.dropdown-list {
+  position: fixed;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  max-width: calc(100vw - 16px);
+  max-height: 280px;
+  padding: 4px;
+  overflow-y: auto;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 32px var(--shadow);
+}
+
+.dropdown-option {
+  flex-shrink: 0; /* a long list scrolls; its options keep their height */
+  padding: 7px 10px;
+  font: 13px var(--font);
+  color: var(--text);
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.dropdown-option:hover,
+.dropdown-option:focus-visible {
+  background: var(--surface-3);
+  outline: none;
+  box-shadow: none; /* the highlight says where the keys are, no ring as well */
+}
+
+.dropdown-option[aria-selected="true"] {
+  font-weight: 600;
+  color: var(--accent);
+}
+
 .input:focus,
 .input:focus-visible {
   outline: none;
