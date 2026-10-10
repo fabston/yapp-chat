@@ -2,6 +2,27 @@
 
 What changed in each version of Yapp Chat, newest first. Get it from the [Chrome Web Store](https://chromewebstore.google.com/detail/yapp-chat/ocebmcgmildjdidagnnifoegheabnpgd).
 
+## 1.0.25
+- Predictions, polls and pinned messages, above the chat on Twitch and Kick, as on their own sites:
+  - A prediction shows its outcomes with their share of the points, how many predicted each, and the time left to predict; then *Locked*, then its result with the winner marked.
+  - A poll shows its choices with their votes and the time left; when it ends, the winner is marked.
+  - A pinned message shows as a line of the chat (emotes, the name opening their card) with who pinned it.
+  - They're to look at: voting and predicting stay on Twitch and Kick. ✕ puts one away; Settings → *Chat* → *Pinned messages, polls and predictions* turns them all off. In a combined chat each says whose it is.
+- The raid bar (in channels you moderate) is a card now, like those: the raid's icon, its viewers as a pill, and buttons with icons that tick off once done.
+
+## 1.0.24
+- More commands in the message box (Twitch; sign in again once for them, Settings shows it):
+  - For everyone: `/clip` makes a clip of the stream's last moments and gives you its link, `/block name` blocks someone on Twitch and hides their messages here (`/unblock` undoes both), `/w name message` whispers them (answers arrive on twitch.tv for now).
+  - In your own channel: `/mod` and `/unmod`, `/vip` and `/unvip`, `/raid channel` and `/unraid`, `/commercial` for an ad break, and `/marker` for a stream marker (editors can use that one too).
+  - Typing `/` now suggests commands to everyone, only the ones you can use in that chat; `/help` lists the same. Settings → *Moderation* marks which are for everyone or the broadcaster.
+  - A command typed in full that takes nothing (`/clip`, `/clear`) runs at the first Enter, instead of needing a second one.
+- Channel points on Twitch stand out: a *Highlighted message* says so above it, and a reward redeemed with a message shows which reward and what it cost ("Redeemed Hydrate · 500"). They're never folded into repeats.
+- Mentions can make themselves heard: Settings → *Notifications* has *Play a sound for mentions* (a short ping) and *Flash the window for mentions* (the taskbar or Dock asks for attention when the chat isn't in front). Both are off until you turn them on.
+- Nicknames: your own name for someone, shown in chat instead of theirs (hover it for their real name). Set one in their user card, next to the note, or in Settings → *Friends*; typing `@` finds them by it too. Only you see it.
+- The message box shows emotes as pictures: type an emote's name and it turns into the emote once you type on (as it will look in chat). Backspace right after one turns it back into its name, to change it. A thread's reply box does the same. The message box is also a little bigger.
+- In a combined chat, being banned in one of its channels shows as a small hammer in the header (hover it for which), leaving the names their room; in the list under it, *Banned* is a small tag beside the channel's name, not a wide bar under it.
+- Tab completes emotes too, from their first two letters, without typing `:`; Tab again goes to the next one that fits, then to names. `@` before the letters keeps it to names.
+
 ## 1.0.23
 - Mod tools, much better (Twitch moderators: sign in again once, Settings shows it, for the new ones):
   - Your own timeout lengths, in Settings → *Moderation*: in one row on a message's menu and the user card, the first also on a message's buttons. The user card offers to lift a timeout or ban while one holds.

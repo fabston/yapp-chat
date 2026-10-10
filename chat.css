@@ -155,6 +155,13 @@
   min-width: 0;
 }
 
+.pop-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
 .pop-name {
   overflow: hidden;
   font-weight: 600;
@@ -310,6 +317,20 @@
   border-radius: 999px;
 }
 
+/* In a merged chat's header: just a hammer. */
+.pane-flag.flag-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+}
+
+.flag-icon .icon {
+  width: 12px;
+  height: 12px;
+}
+
 /* Short of room, "Reconnecting…" gives way (shortened) before the chat's name, live info and modes. */
 .pane-status {
   flex: 0 1000 auto;
@@ -422,6 +443,36 @@
 .first-line .icon {
   width: 1.1em;
   height: 1.1em;
+}
+
+/* Channel points (Twitch): a highlighted message, or a reward redeemed with one, said above it (lib/chat.js renderMessage). */
+.msg.redeemed {
+  background: color-mix(in srgb, var(--twitch) 12%, transparent);
+  border-left-color: var(--twitch);
+}
+
+.redeem-line {
+  font-weight: 600;
+  color: color-mix(in srgb, var(--twitch) 60%, var(--text));
+}
+
+.redeem-line strong {
+  font-weight: 800;
+}
+
+/* A touch bigger and bolder than the first message's: these two have finer lines. */
+.redeem-line .icon {
+  width: 1.25em;
+  height: 1.25em;
+  stroke-width: 2.4;
+}
+
+.redeem-cost {
+  margin-left: 2px;
+  padding: 0 6px;
+  font-size: 0.9em;
+  background: color-mix(in srgb, var(--twitch) 18%, transparent);
+  border-radius: 999px;
 }
 
 /* Subs, gifts, raids, announcements, Super Chats, memberships: tinted in their colour (lib/chat.js renderNotice). */
@@ -1164,6 +1215,38 @@ img.tip-preview {
   text-align: center;
 }
 
+/* The message box (lib/emote-box.js): one line, the emotes typed in it as pictures. */
+.emote-box {
+  min-height: calc(1.4em + 16px); /* a line, empty too */
+  overflow: hidden;
+  white-space: pre; /* the spaces you type, as an input keeps them */
+  cursor: text;
+}
+
+/* The chat's own, a little bigger than the other boxes (a thread's reply box): it's where you write. */
+.pane-input .emote-box {
+  min-height: calc(1.4em + 20px);
+  padding: 9px 11px;
+  font-size: 14px;
+}
+
+.emote-box:empty::before {
+  color: var(--muted);
+  pointer-events: none;
+  content: attr(data-placeholder);
+}
+
+.emote-box[contenteditable="false"] {
+  opacity: 0.6;
+}
+
+.box-emote {
+  display: inline-block;
+  height: 1.7em;
+  margin: -0.4em 1px;
+  vertical-align: middle;
+}
+
 /* Several Twitch channels here: pick which one you're writing to. */
 .input-row {
   display: flex;
@@ -1225,9 +1308,9 @@ img.tip-preview {
 
 /* Who you're writing to, in a merged chat: their picture (and platform, when the chat mixes them). */
 .target-pic {
-  --badge: 11px;
-  width: 22px;
-  height: 22px;
+  --badge: 12px;
+  width: 24px;
+  height: 24px;
 }
 
 .menu-pic {
@@ -1699,6 +1782,26 @@ img.tip-preview {
   padding: 5px 9px;
   font-size: 12px;
   resize: vertical;
+}
+
+/* Your nickname for them and the note, side by side (lib/card.js). */
+.card-private {
+  display: flex;
+  gap: 6px;
+  margin: 10px 14px 0;
+}
+
+.card-private .card-note-input {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+
+.card-nick-input {
+  flex: 0 0 32%;
+  min-width: 0;
+  padding: 5px 9px;
+  font-size: 12px;
 }
 
 /* Followers, joined, live, subscribed: one short line each, two per row. */
@@ -2675,24 +2778,212 @@ img.tip-preview {
   color: var(--muted);
 }
 
-/* A raid into a channel you moderate: protect the chat, or shout them out (lib/mod-tools.js offerRaidProtection). */
-.raid-bar {
+/* ---- Above the chat: a channel's prediction, poll and pinned message (lib/pinned.js) ---- */
+
+.pane-pinned {
   display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 4px 8px;
-  padding: 5px 6px 8px 12px;
+  flex-shrink: 0;
+  gap: 6px;
+  max-height: 45%;
+  padding: 6px 8px;
+  overflow-y: auto;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.pin-card {
+  display: grid;
+  gap: 4px;
+  padding: 6px 8px 8px 10px;
   font-size: 12px;
-  background: color-mix(in srgb, #ff9f43 14%, var(--surface));
-  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+/* What it is, its state (time left, "Locked", who pinned), and the ✕ at the end. */
+.pin-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--muted);
+}
+
+.pin-head > .icon {
+  flex: none;
+  width: 13px;
+  height: 13px;
+}
+
+.pin-head .msg-source {
+  margin-right: 0;
+}
+
+.pin-kind {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.pin-state {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pin-head .btn {
+  margin: -2px -4px -2px 0;
+  padding: 3px;
+}
+
+.pin-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* A choice or an outcome: its share fills the row from the left, in its colour. */
+.pin-bar {
+  --fill: var(--accent-soft);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 4px 8px;
+  color: var(--text);
+  background: linear-gradient(to right, var(--fill) var(--share), var(--surface-3) var(--share));
+  border-radius: 6px;
+}
+
+.pin-bar[data-color="blue"] {
+  --fill: rgba(56, 122, 255, 0.34);
+}
+
+.pin-bar[data-color="pink"] {
+  --fill: rgba(245, 0, 155, 0.3);
+}
+
+.pin-bar-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pin-bar-title .icon {
+  width: 13px;
+  height: 13px;
+  margin-right: 4px;
+  vertical-align: -2px;
+}
+
+.pin-bar-detail {
+  flex: none;
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.pin-bar-share {
+  flex: none;
+  min-width: 2.6em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* It's over: the one that won stands out, the others step back. */
+.pin-bar.won {
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.pin-bar.lost {
+  opacity: 0.6;
+}
+
+/* A pinned message, as its line in the chat; a long one scrolls. */
+.pin-message {
+  max-height: 4.6em;
+  overflow-y: auto;
+  font-size: var(--chat-size);
+  line-height: 1.5;
+}
+
+.pin-message .msg {
+  padding: 0;
+  border: none;
+}
+
+/* In a combined chat the card's head says whose it is. */
+.pin-message .msg-source {
+  display: none;
+}
+
+/* A raid into a channel you moderate: protect the chat, or shout them out (lib/mod-tools.js offerRaidProtection).
+   A card as the ones above the chat (.pin-card), in the raid's colour. */
+.raid-bar {
+  --notice: #ff9f43;
+  display: grid;
+  flex-shrink: 0;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 8px;
+  padding: 8px 8px 8px 10px;
+  font-size: 12px;
+  background: color-mix(in srgb, var(--notice) 10%, var(--surface-2));
+  border: 1px solid color-mix(in srgb, var(--notice) 35%, var(--border-subtle));
+  border-radius: var(--radius-sm);
+}
+
+.raid-bar + .pane-pinned:not([hidden]) {
+  padding-top: 0;
+}
+
+.raid-icon {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  color: #fff;
+  background: var(--notice);
+  border-radius: 50%;
+}
+
+.raid-icon .icon {
+  width: 13px;
+  height: 13px;
 }
 
 .raid-text {
+  min-width: 0;
+  font-size: 13px;
   color: var(--muted);
 }
 
 .raid-text strong {
   color: var(--text);
+}
+
+/* How many they bring, as a notice's chip. */
+.raid-viewers {
+  display: inline-block;
+  margin-left: 2px;
+  padding: 0 7px;
+  font-size: 11px;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--notice) 70%, var(--text));
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--notice) 18%, transparent);
+  border-radius: 999px;
+}
+
+.raid-bar > .btn {
+  margin: -2px 0;
+  padding: 3px;
 }
 
 .raid-actions {
@@ -2703,8 +2994,25 @@ img.tip-preview {
 }
 
 .raid-actions .btn {
-  padding: 4px 8px;
+  padding: 4px 9px;
   font-size: 12px;
+}
+
+.raid-actions .btn:not(.btn-primary) {
+  background: var(--surface);
+}
+
+.raid-actions .btn .icon {
+  width: 13px;
+  height: 13px;
+}
+
+/* Done: it says so, quietly. */
+.raid-actions .btn.done {
+  color: var(--muted);
+  background: none;
+  border-color: var(--border-subtle);
+  opacity: 1;
 }
 
 /* A first-time chatter's account under a month old. */

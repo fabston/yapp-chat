@@ -19,8 +19,9 @@ A free, open-source Chrome and Brave extension. No account needed, no tracking.
 - 🧘 **A calmer chat.** Hide bots, `!commands`, people you don't want to read, or messages with certain words. Highlights and hidden words take regexes too, with a small builder to make them.
 - ⏸️ **It holds still.** The chat stops scrolling while you hover a name, read a reply or open a card, so nothing jumps away from you.
 - 💬 **Follow a conversation.** Click a reply for the whole back-and-forth in one place, emotes and all, and jump to any message in it.
+- 🏆 **Predictions, polls and pins.** A channel's prediction, poll and pinned message sit above the chat on Twitch and Kick, with the shares, the time left and the result.
 - 🛡️ **Mod tools, on Twitch and Kick.** Delete, time out (your own lengths and reasons) and ban from the message itself, its menu, the user card or a key (D, T, B). Lift a timeout from its line.
-  - ⌨️ `/commands` in the message box with suggestions: `/timeout name 10m spam`, `/ban`, `/unban`, `/warn`, `/slow`, `/followers`, `/shield`, `/announce`, `/shoutout`…
+  - ⌨️ `/commands` in the message box with suggestions: `/timeout name 10m spam`, `/ban`, `/unban`, `/warn`, `/slow`, `/followers`, `/shield`, `/announce`, `/shoutout`… Some are for everyone (`/clip`, `/block`, `/w`), some for your own channel (`/mod`, `/vip`, `/raid`, `/commercial`, `/marker`).
   - 👀 See what other mods do: who timed out whom and why, chat mode changes, warnings.
   - 🤖 Twitch: AutoMod's held messages right in the chat, to allow or deny; suspicious users tagged; chat modes and Shield Mode from the header; who's in chat; announcements and shoutouts.
   - 🚨 Twitch: raid protection (followers-only for 10 minutes, Shield Mode or a shoutout in one click) and a tag on first-time chatters with brand-new accounts.

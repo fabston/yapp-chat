@@ -8,6 +8,7 @@ import { backupText, CHAT_FONTS, clearNotes, COMMON_BOTS, DEFAULTS, EMOTE_SIZES,
 import { kickPicture, kickSignIn, kickSignOut } from './lib/kick.js';
 import { entryRegex, formatDuration, patternFor, readableColor, setNameTheme } from './lib/format.js';
 import { commandGroups } from './lib/commands.js';
+import { mentionPing } from './lib/mentions.js';
 import { parseDuration, shortDuration } from './lib/moderation.js';
 import { freshTwitchAuth, twitchFollowedChannels, twitchProfile, twitchSignIn, twitchSignOut, validateToken } from './lib/twitch.js';
 import { checkbox, dropdown, el, platformBadge } from './lib/ui.js';
@@ -220,6 +221,8 @@ function render() {
   $('liveNotifyRow').disabled = !auth.token;
   switchRow('liveNotifyRow', settings.liveNotify && Boolean(auth.token));
   switchRow('mentionNotifyRow', settings.mentionNotify);
+  switchRow('mentionSoundRow', settings.mentionSound);
+  switchRow('mentionFlashRow', settings.mentionFlash);
   $('liveNotifyDesc').textContent = auth.token ? 'A desktop notification; click it to open the stream. For all of them, or the ones you choose below.' : 'Sign in to Twitch first (Accounts, above).';
   renderLiveChannels();
   applyTheme();
@@ -230,7 +233,9 @@ function render() {
     for (const btn of $(id).children) btn.setAttribute('aria-pressed', String(btn.dataset.value === settings[key]));
   }
   renderList('friendList', 'friends', 'No friends yet.', (login) => `Remove ${login} from friends`);
+  renderNicknames();
   switchRow('holdAnywhereRow', settings.holdAnywhere);
+  switchRow('showPinnedRow', settings.showPinned);
   switchRow('foldRow', settings.foldRepeats);
   // Similar messages fold only where repeats do.
   $('foldSimilarRow').disabled = !settings.foldRepeats;
@@ -339,6 +344,14 @@ const SCOPE_FEATURES = [
   ['moderator:read:chatters', "mod tools: who's in chat"],
   ['moderator:manage:announcements', 'mod tools: announcements'],
   ['moderator:manage:shoutouts', 'mod tools: shoutouts'],
+  ['clips:edit', 'commands: /clip'],
+  ['user:manage:blocked_users', 'commands: /block and /unblock'],
+  ['user:manage:whispers', 'commands: /w (whispers)'],
+  ['channel:manage:moderators', 'your channel: /mod and /unmod'],
+  ['channel:manage:vips', 'your channel: /vip and /unvip'],
+  ['channel:manage:raids', 'your channel: /raid and /unraid'],
+  ['channel:edit:commercial', 'your channel: /commercial'],
+  ['channel:manage:broadcast', 'your channel: /marker'],
 ];
 
 /** Signed in before some features asked for their permission: say what's missing, and fix it in one click. */
@@ -407,6 +420,12 @@ $('altRowsRow').addEventListener('click', () => saveSettings({ altRows: !setting
 $('cosmeticsRow').addEventListener('click', () => saveSettings({ cosmetics: !settings.cosmetics }));
 $('liveNotifyRow').addEventListener('click', () => saveSettings({ liveNotify: !settings.liveNotify }));
 $('mentionNotifyRow').addEventListener('click', () => saveSettings({ mentionNotify: !settings.mentionNotify }));
+// Turning the sound on plays it, so you know what it's like.
+$('mentionSoundRow').addEventListener('click', () => {
+  if (!settings.mentionSound) mentionPing();
+  saveSettings({ mentionSound: !settings.mentionSound });
+});
+$('mentionFlashRow').addEventListener('click', () => saveSettings({ mentionFlash: !settings.mentionFlash }));
 
 /* ---- Appearance preview ---- */
 
@@ -759,7 +778,38 @@ $('friendForm').addEventListener('submit', async (e) => {
   if (!settings.friends.includes(login)) await saveSettings({ friends: [...settings.friends, login] });
   $('friendInput').value = '';
 });
+/** Friends → Nicknames: who, and your name for them, each with a ✕ (as renderList's lists, from an object). */
+function renderNicknames() {
+  const items = Object.entries(settings.nicknames).map(([login, nick]) => {
+    const li = el('li');
+    const text = el('span');
+    text.append(login, el('span', 'nickname-arrow', ' → '), el('strong', '', nick));
+    const remove = el('button', 'btn btn-ghost btn-icon');
+    remove.type = 'button';
+    remove.title = 'Remove';
+    remove.setAttribute('aria-label', `Remove your nickname for ${login}`);
+    remove.append(icon('x'));
+    remove.addEventListener('click', () => {
+      const { [login]: gone, ...rest } = settings.nicknames;
+      saveSettings({ nicknames: rest });
+    });
+    li.append(text, remove);
+    return li;
+  });
+  $('nicknameList').replaceChildren(...(items.length ? items : [Object.assign(el('li', 'none'), { textContent: 'No nicknames yet.' })]));
+}
+$('nicknameForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const login = $('nicknameLogin').value.trim().replace(/^@/, '').toLowerCase();
+  const nick = $('nicknameInput').value.trim();
+  if (!login || !nick) return ($('nicknameError').textContent = 'Their name, and your nickname for them.');
+  if (Object.keys(settings.nicknames).length >= 200 && !Object.hasOwn(settings.nicknames, login)) return ($('nicknameError').textContent = 'Two hundred nicknames at most: remove one first.');
+  await saveSettings({ nicknames: { ...settings.nicknames, [login]: nick } });
+  $('nicknameLogin').value = $('nicknameInput').value = '';
+  $('nicknameError').textContent = '';
+});
 $('holdAnywhereRow').addEventListener('click', () => saveSettings({ holdAnywhere: !settings.holdAnywhere }));
+$('showPinnedRow').addEventListener('click', () => saveSettings({ showPinned: !settings.showPinned }));
 $('foldRow').addEventListener('click', () => saveSettings({ foldRepeats: !settings.foldRepeats }));
 $('foldSimilarRow').addEventListener('click', () => saveSettings({ foldSimilar: !settings.foldSimilar }));
 
@@ -799,7 +849,7 @@ async function addEntry(key, entry, errorId) {
 
 /**
  * Moderation → Commands: the same list as /help (lib/commands.js commandGroups), a card per group, each command a row
- * the search finds ("slow" leaves /slow); the ones Kick has too say so.
+ * the search finds ("slow" leaves /slow); the ones for everyone or the broadcaster only, and the ones Kick has too, say so.
  */
 function renderCommands() {
   const kick = new Set(commandGroups('kick').flatMap(([, rows]) => rows.map(([name]) => name)));
@@ -813,10 +863,12 @@ function renderCommands() {
       const what = el('span', 'setting-title');
       what.append(el('code', '', `/${name}`), ...(command.usage ? [' ', el('span', 'command-usage', command.usage)] : []));
       const desc = el('span', 'setting-desc', command.about);
-      if (off) desc.append(' · ', el('code', '', `/${off}`), ' turns it off');
+      if (off) desc.append(' · ', el('code', '', `/${off}`), command.off ? ' undoes it' : ' turns it off');
       const text = el('span', 'setting-text');
       text.append(what, desc);
-      row.append(text, ...(kick.has(name) && name !== 'help' ? [el('span', 'command-kick', 'Kick too')] : []));
+      // Who it's for, when not moderators; and Kick, where it works there too.
+      const who = { anyone: 'Everyone', broadcaster: 'Broadcaster' }[command.who];
+      row.append(text, ...(who ? [el('span', 'command-who', who)] : []), ...(kick.has(name) && name !== 'help' ? [el('span', 'command-kick', 'Kick too')] : []));
       card.append(row);
     }
     return [label, card];

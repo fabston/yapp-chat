@@ -98,6 +98,11 @@
               <span class="setting-desc">A chat opens with its last messages instead of empty.</span></span>
             <span class="switch" aria-hidden="true"></span>
           </button>
+  <button type="button" class="setting-row" id="showPinnedRow" role="switch" aria-checked="false">
+            <span class="setting-text"><span class="setting-title">Pinned messages, polls and predictions</span>
+              <span class="setting-desc">Above the chat, as on Twitch and Kick, with live results. To vote or predict, go to their site.</span></span>
+            <span class="switch" aria-hidden="true"></span>
+          </button>
   <button type="button" class="setting-row" id="holdAnywhereRow" role="switch" aria-checked="false">
             <span class="setting-text"><span class="setting-title">Hold the chat anywhere under the pointer</span>
               <span class="setting-desc">It always holds still over names, links and replies. With this, anywhere you move the pointer over it, until it rests a moment.</span></span>
@@ -304,7 +309,7 @@
           </button>
         </div>
         <h3>Commands</h3>
-        <p class="card-desc">For moderators, in the message box: type <kbd>/</kbd> and they're suggested as you go; <code>/help</code> lists them in the chat.</p>
+        <p class="card-desc">In the message box: type <kbd>/</kbd> and the ones you can use there are suggested as you go; <code>/help</code> lists them in the chat. Most are for moderators; a few are for everyone, or for your own channel.</p>
         <!-- Folded (most people don't moderate); the search opens it for a command it finds (options.js searchSettings). -->
         <details class="fold command-more">
           <summary id="commandSummary">All commands</summary>
@@ -343,6 +348,16 @@
               <span class="setting-desc">A desktop notification for each mention in an open chat (what goes to the 🔔 inbox: see Highlights); click it to go to the message.</span></span>
             <span class="switch" aria-hidden="true"></span>
           </button>
+          <button type="button" class="setting-row" id="mentionSoundRow" role="switch" aria-checked="false">
+            <span class="setting-text"><span class="setting-title">Play a sound for mentions</span>
+              <span class="setting-desc">A short ping in the window the chat is in. Turning it on plays it once.</span></span>
+            <span class="switch" aria-hidden="true"></span>
+          </button>
+          <button type="button" class="setting-row" id="mentionFlashRow" role="switch" aria-checked="false">
+            <span class="setting-text"><span class="setting-title">Flash the window for mentions</span>
+              <span class="setting-desc">The chat's window asks for attention in the taskbar or Dock when it isn't in front.</span></span>
+            <span class="switch" aria-hidden="true"></span>
+          </button>
         </div>
       </section>
 
@@ -357,6 +372,19 @@
           </button>
         </form>
         <ul class="item-list" id="friendList"></ul>
+        <h3>Nicknames</h3>
+        <p class="card-desc">Your own name for someone, shown in chat instead of theirs (hover it for their real name). Only you see it. Set one here, or in their user card.</p>
+        <form class="add-row" id="nicknameForm" novalidate>
+          <label class="visually-hidden" for="nicknameLogin">Their name</label>
+          <input type="text" id="nicknameLogin" class="input" placeholder="their name" autocomplete="off" spellcheck="false" maxlength="40">
+          <label class="visually-hidden" for="nicknameInput">Your nickname for them</label>
+          <input type="text" id="nicknameInput" class="input" placeholder="your nickname for them" autocomplete="off" spellcheck="false" maxlength="30">
+          <button type="submit" class="btn btn-primary">
+            <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>Add
+          </button>
+        </form>
+        <p class="form-error" id="nicknameError" role="alert"></p>
+        <ul class="item-list" id="nicknameList"></ul>
       </section>
 
       <section class="panel" id="emotes" aria-labelledby="emotes-h">
@@ -405,8 +433,8 @@
         <div class="card nested shortcut-card">
           <div class="setting-row static shortcut"><span class="setting-text"><span class="setting-title">Suggest emotes</span></span><span class="keys"><code class="typed">:lul</code></span></div>
           <div class="setting-row static shortcut"><span class="setting-text"><span class="setting-title">Suggest people chatting here</span></span><span class="keys"><code class="typed">@na</code></span></div>
-          <div class="setting-row static shortcut"><span class="setting-text"><span class="setting-title">Commands, in a chat you moderate</span></span><span class="keys"><kbd>/</kbd></span></div>
-          <div class="setting-row static shortcut"><span class="setting-text"><span class="setting-title">Complete a name from a few letters</span></span><span class="keys"><kbd>Tab</kbd></span></div>
+          <div class="setting-row static shortcut"><span class="setting-text"><span class="setting-title">Commands: a few for everyone, more where you moderate</span></span><span class="keys"><kbd>/</kbd></span></div>
+          <div class="setting-row static shortcut"><span class="setting-text"><span class="setting-title">Complete an emote or a name from a few letters; again for the next</span></span><span class="keys"><kbd>Tab</kbd></span></div>
           <div class="setting-row static shortcut"><span class="setting-text"><span class="setting-title">What you sent before, in an empty box</span></span><span class="keys"><kbd>↑</kbd><kbd>↓</kbd></span></div>
         </div>
         <p class="group-label" data-no-search>Mouse</p>

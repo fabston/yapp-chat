@@ -3,7 +3,7 @@
   "name": "Yapp Chat",
   "description": "Read Twitch, Kick and YouTube live chat beside the stream or side by side, with BTTV, FFZ and 7TV emotes, highlights and user cards.",
   "homepage_url": "https://yapp.chat",
-  "version": "1.0.23",
+  "version": "1.0.25",
   "minimum_chrome_version": "116",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAiTiqkbxVyGk5UhiW8HQyTF/e5KB1hxtXiM9IDCsmc+YkkfIJj4PezrIzaZuPdmh9vd+005hCfwpYVp0Ybc2VyjaixyG+zbZV2JDOIDTNyD5KyyR0b40cMD2wg9/M59VaZcuQVBE/PPqZbpuS99Lv7MMMKQ6ijNe/Xum2OASbK9WyQl1X0LDwR+DFNFoCZlz0b1KgZVH9NOk675xW9x2Y5eFg4H3P78wgALAJtvA9zlss+HNEndzBxkpTMOQ/ulNFXUPzZXFARIgh124AT3eg2l+0vsKRFuGeO/+5drJIhsr3bttomwFmfHQNlqKE0C3hVO5rd3Nlc+t9SuasW/BubQIDAQAB",
   "permissions": [

@@ -506,6 +506,13 @@ code {
   color: var(--muted);
 }
 
+/* Friends → Nicknames: "login → nickname". */
+.nickname-arrow {
+  color: var(--muted);
+}
+
+/* A tag on a command: who it's for, or that Kick has it too. */
+.command-who,
 .command-kick {
   flex-shrink: 0;
   padding: 1px 8px;
