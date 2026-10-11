@@ -4,14 +4,15 @@
  */
 
 import { icon } from './lib/icons.js';
-import { backupText, CHAT_FONTS, clearNotes, COMMON_BOTS, DEFAULTS, EMOTE_SIZES, FONT_SIZES, isNotesKey, liveExceptWith, loadKickAuth, loadNotes, loadSettings, loadTwitchAuth, notifiesFor, readBackup, saveKickAuth, saveNotes, saveSettings, saveTwitchAuth } from './lib/settings.js';
-import { kickPicture, kickSignIn, kickSignOut } from './lib/kick.js';
-import { entryRegex, formatDuration, patternFor, readableColor, setNameTheme } from './lib/format.js';
+import { backupText, CHAT_FONTS, cleanLogin, clearNotes, COMMON_BOTS, DEFAULTS, EMOTE_SIZES, FONT_SIZES, isNotesKey, LIMITS, liveExceptWith, loadKickAuth, loadNotes, loadSettings, loadTwitchAuth, notifiesFor, readBackup, saveKickAuth, saveNotes, saveSettings, saveTwitchAuth } from './lib/settings.js';
+import { freshKickAuth, kickPicture, kickSignIn, kickSignOut } from './lib/kick.js';
+import { entryRegex, formatDuration, patternFor, readableColor } from './lib/format.js';
 import { commandGroups } from './lib/commands.js';
 import { mentionPing } from './lib/mentions.js';
 import { parseDuration, shortDuration } from './lib/moderation.js';
-import { freshTwitchAuth, twitchFollowedChannels, twitchProfile, twitchSignIn, twitchSignOut, validateToken } from './lib/twitch.js';
-import { checkbox, dropdown, el, platformBadge } from './lib/ui.js';
+import { BADGES, discordLinking, discordSignIn, joinCosmetics, linkDiscord, loadMine, PAINTS, refreshCatalog, saveCosmetic, useCatalog } from './lib/paints.js';
+import { freshTwitchAuth, twitchEmoteUrl, twitchFollowedChannels, twitchProfile, twitchSignIn, twitchSignOut, validateToken } from './lib/twitch.js';
+import { applyAppearance, button, checkbox, dropdown, el, outLink, platformBadge, shiny } from './lib/ui.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -37,9 +38,31 @@ function showStatus(id, text, ok) {
 const setStatus = (text, ok = true) => showStatus('accountStatus', text, ok);
 const setKickStatus = (text, ok = true) => showStatus('kickStatus', text, ok);
 
+/** A setting's words: its title, and under it what it does (its text, or a node that says it). */
+function settingText(title, desc) {
+  const text = el('span', 'setting-text');
+  text.append(el('span', 'setting-title', title), typeof desc === 'string' ? el('span', 'setting-desc', desc) : desc);
+  return text;
+}
+
 function switchRow(id, on) {
   $(id).setAttribute('aria-checked', String(on));
 }
+
+/**
+ * The rows that turn one setting on or off, in the page's order: [the row's id, the setting]. render() draws each
+ * as its setting is, and a click flips it. (The emote sets' rows are made in render().)
+ */
+const SWITCHES = [
+  ['autoOpenRow', 'autoOpen'], ['twitchButtonRow', 'twitchButton'], ['offerSimulcastRow', 'offerSimulcast'],
+  ['recentRow', 'recentMessages'], ['showPinnedRow', 'showPinned'], ['cardLogsRow', 'cardLogs'],
+  ['holdAnywhereRow', 'holdAnywhere'], ['foldRow', 'foldRepeats'], ['foldSimilarRow', 'foldSimilar'],
+  ['timestampsRow', 'timestamps'], ['badgesRow', 'badges'], ['cosmeticsRow', 'cosmetics'], ['altRowsRow', 'altRows'],
+  ['highlightNameRow', 'highlightName'], ['mentionWordsRow', 'mentionWords'],
+  ['hideCommandsRow', 'hideCommands'], ['hideBotsRow', 'hideBots'],
+  ['modButtonsRow', 'modButtons'], ['modKeysRow', 'modKeys'], ['modLogRow', 'modLog'], ['raidProtectRow', 'raidProtect'], ['flagNewAccountsRow', 'flagNewAccounts'],
+  ['liveNotifyRow', 'liveNotify'], ['mentionNotifyRow', 'mentionNotify'], ['mentionSoundRow', 'mentionSound'], ['mentionFlashRow', 'mentionFlash'],
+];
 
 /** Your picture beside your name, with the platform's badge on its corner (an empty circle until it loads). */
 function showPicture(id, platform, url) {
@@ -51,12 +74,20 @@ function showPicture(id, platform, url) {
 
 let kickPictureAsked = false;
 
-/** Twitch's from your public profile; Kick's kept at sign-in, or asked for once for a sign-in from before. */
+/**
+ * Each kept with its sign-in, so it's there at once the next time: Twitch's from your public profile (asked each
+ * time the page opens, as you may have changed it); Kick's kept at sign-in, or asked for once for a sign-in from before.
+ */
 function renderPictures() {
   if (auth.token) {
-    showPicture('accountPic', 'twitch');
+    showPicture('accountPic', 'twitch', auth.picture);
     twitchProfile(auth.login)
-      .then((p) => showPicture('accountPic', 'twitch', p?.photo))
+      .then((p) => {
+        if (!p?.photo || p.photo === auth.picture || !auth.token) return;
+        auth.picture = p.photo;
+        saveTwitchAuth(auth);
+        showPicture('accountPic', 'twitch', p.photo);
+      })
       .catch(() => {});
   }
   if (kickAuth.token) {
@@ -180,108 +211,211 @@ function entryView(entry) {
   return code;
 }
 
-/** A list of names or words from settings[key], each with a ✕ that removes it, or `empty` when there are none. */
+/**
+ * A list of what settings[key] holds (an array's values, or an object's entries as [name, value]), each drawn by
+ * `view` with a ✕ that removes it, or `empty` when there are none.
+ */
 function renderList(id, key, empty, removeLabel, view = entryView) {
-  const items = settings[key].map((value) => {
-    const li = document.createElement('li');
-    li.append(view(value));
-    const remove = document.createElement('button');
-    remove.type = 'button';
-    remove.className = 'btn btn-ghost btn-icon';
+  const held = settings[key];
+  const listed = Array.isArray(held);
+  const without = (entry) => (listed ? held.filter((value) => value !== entry) : Object.fromEntries(Object.entries(held).filter(([name]) => name !== entry[0])));
+  const items = (listed ? held : Object.entries(held)).map((entry) => {
+    const remove = button('btn btn-ghost btn-icon', '', () => saveSettings({ [key]: without(entry) }));
     remove.title = 'Remove';
-    remove.setAttribute('aria-label', removeLabel(value));
+    remove.setAttribute('aria-label', removeLabel(entry));
     remove.append(icon('x'));
-    remove.addEventListener('click', () => saveSettings({ [key]: settings[key].filter((v) => v !== value) }));
-    li.append(remove);
+    const li = el('li');
+    li.append(view(entry), remove);
     return li;
   });
-  $(id).replaceChildren(...(items.length ? items : [Object.assign(document.createElement('li'), { className: 'none', textContent: empty })]));
+  $(id).replaceChildren(...(items.length ? items : [el('li', 'none', empty)]));
 }
+
+/**
+ * Accounts: your name's paint and your badge, for each sign-in (lib/paints.js). A dropdown of the paints, each in its
+ * own colours; a dropdown of the badges that are yours to wear, when you have any (today the founders', for the
+ * first 420 accounts that signed in); and a line of chat with yours on your name. Drawn at once from what's kept
+ * here of you (cosmeticsMine), which the service is then asked about again. Picking one shows at once and sets it,
+ * for everyone who uses Yapp Chat to see.
+ */
+let cosmeticsMine = await loadMine(); // "twitch:<id>" → { paint, badge, offers }
+const picking = {}; // "twitch:<id>" → { paint or badge: the one being saved }, shown meanwhile
+const askedMine = {}; // platform → the account the service was asked about, since this page opened
+function renderPaints() {
+  const accounts = [
+    ['twitch', 'twitchPaints', auth, auth.login, freshTwitchAuth, setStatus],
+    ['kick', 'kickPaints', kickAuth, kickAuth.name || kickAuth.login, freshKickAuth, setKickStatus],
+  ];
+  for (const [platform, box, account, name, fresh, say] of accounts) {
+    const host = $(box);
+    host.hidden = !account.token || !account.userId;
+    if (host.hidden) continue;
+    // Appearance → Name paints and extra badges is off: nothing to pick, and the service isn't asked (nor the account
+    // joined to it: the privacy policy says it's kept only while that's on).
+    if (!settings.cosmetics) {
+      host.replaceChildren(el('p', 'setting-desc', 'Name paints and extra badges are off (Appearance).'));
+      continue;
+    }
+    const key = `${platform}:${account.userId}`;
+    // The service is asked once, each time this page opens: the account joins its members if it hasn't, and what
+    // it says is kept (and drawn, where it's news).
+    if (askedMine[platform] !== account.userId) {
+      askedMine[platform] = account.userId;
+      fresh(account)
+        .then(() => joinCosmetics(platform, account.userId, account.token))
+        .catch(() => {}); // not now: what's kept still shows
+    }
+    const me = { ...cosmeticsMine[key], ...picking[key] };
+    const paint = PAINTS.find((p) => p.id === me.paint);
+    const yours = (me.offers?.badge || []).filter((id) => BADGES[id]);
+    const badge = yours.includes(me.badge) ? me.badge : '';
+    const painted = (text, paint) => {
+      const span = el('span', `name${paint ? ' painted' : ''}${paint?.flow ? ' flowing' : ''}`, text);
+      if (paint) span.style.backgroundImage = paint.image;
+      else span.style.color = readableColor('', name);
+      return span;
+    };
+    const pictured = (id) => {
+      const img = Object.assign(el('img', 'badge'), { src: BADGES[id].url, alt: BADGES[id].title });
+      return BADGES[id].shine ? shiny(img) : img;
+    };
+    const choose = async (kind, value) => {
+      picking[key] = { ...picking[key], [kind]: value };
+      renderPaints(); // it shows before it's saved
+      try {
+        await fresh(account);
+        await saveCosmetic(platform, account.userId, account.token, kind, value);
+        say(value ? `Your ${kind} is set. Others see it within ten minutes.` : `Your ${kind} is off.`);
+      } catch (error) {
+        say(error.message, false);
+      }
+      if (picking[key]?.[kind] === value) delete picking[key][kind]; // not one picked since
+      cosmeticsMine = await loadMine();
+      renderPaints(); // as it's kept now: back to what it was, if it couldn't be saved
+    };
+    const row = (title, desc, choices, value, kind) => {
+      const line = el('div', 'paint-row');
+      line.append(settingText(title, desc), dropdown(choices, value, (picked) => choose(kind, picked), title));
+      return line;
+    };
+    // The paints that aren't everyone's (the founders', the team's, a booster's, a season's): listed when the service
+    // says they're yours (and the one you wear), before the others and marked "Limited" (options.css .paint-choice).
+    const paints = PAINTS.filter((p) => !p.only || p === paint || me.offers?.paint?.includes(p.id)).sort((a, b) => Boolean(b.only) - Boolean(a.only));
+    const choice = (p) => () => {
+      const node = el('span', `paint-choice${p.only ? ' limited' : ''}`);
+      node.append(painted(p.name, p));
+      return node;
+    };
+    const rows = [row('Name paint', 'Colours through your name, for everyone who uses Yapp Chat to see.', [['', 'None'], ...paints.map((p) => [p.id, choice(p)])], paint?.id || '', 'paint')];
+    if (yours.length) {
+      const drawn = (id) => () => {
+        const choice = el('span', 'badge-choice');
+        choice.append(pictured(id), BADGES[id].title);
+        return choice;
+      };
+      rows.push(row('Badge', 'Before your name, for everyone who uses Yapp Chat to see.', [['', 'None'], ...yours.map((id) => [id, drawn(id)])], badge, 'badge'));
+    }
+    // Discord (once it's set up on the service): linked, boosting Yapp Chat's server gives the Booster badge and the
+    // Boost paint while it lasts.
+    if (discordLinking()) {
+      // What it says is what's so: linking doesn't boost, nor even join the server, so its link is there; and which
+      // Discord account it is ("Linked to duckfan."), for whoever has several (one linked before names were kept: "Linked.").
+      const server = outLink('Yapp Discord server', 'https://yapp.chat/discord', '');
+      const linked = me.discordName ? ['Linked to ', el('strong', '', me.discordName), '. '] : ['Linked. '];
+      const desc = el('span', 'setting-desc');
+      desc.append(...(!me.discord ? ['Boost ', server, ' for a Booster badge and paint.'] : me.boosting ? [...linked, "You're boosting ", server, ': the Booster badge and paint are yours.'] : [...linked, 'Boost ', server, ' to get the Booster badge and paint.']));
+      const linker = button('btn btn-sm', me.discord ? 'Unlink' : 'Link Discord', async () => {
+        linker.disabled = true;
+        try {
+          await fresh(account);
+          const you = await linkDiscord(platform, account.userId, account.token, me.discord ? '' : await discordSignIn());
+          say(!you.discord ? 'Discord unlinked.' : you.boosting ? 'Discord linked. Thanks for boosting: the Booster badge and the Boost paint are yours.' : 'Discord linked. Boost the server to get the badge and paint.');
+        } catch (error) {
+          say(cancelled(error) ? 'Sign-in cancelled.' : error.message, cancelled(error));
+        }
+        cosmeticsMine = await loadMine();
+        renderPaints();
+      });
+      const line = el('div', 'paint-row');
+      line.append(settingText('Discord', desc), linker);
+      rows.push(line);
+    }
+    const preview = el('div', 'paint-preview');
+    if (badge) preview.append(pictured(badge));
+    preview.append(painted(name, paint), el('span', 'sep', ': '), 'this is your name in chat');
+    host.replaceChildren(...rows, preview);
+  }
+}
+
+let drawn = false; // the page has been drawn once: an account that shows up after that has just signed in
 
 function render() {
   renderPictures();
-  $('signedIn').hidden = !auth.token;
+  renderPaints();
+  // Just signed in, it fades in where the button was (options.css .account.arriving); one that's there as the page
+  // opens is simply there.
+  for (const [id, account] of [['signedIn', auth], ['kickSignedIn', kickAuth]]) {
+    if (drawn && $(id).hidden && account.token) $(id).classList.add('arriving');
+    $(id).hidden = !account.token;
+  }
   $('signedOut').hidden = Boolean(auth.token);
   $('accountName').textContent = auth.login || '';
-  $('kickSignedIn').hidden = !kickAuth.token;
   $('kickSignedOut').hidden = Boolean(kickAuth.token);
   $('kickName').textContent = kickAuth.name || '';
+  // The account's ID (what yapp.chat keeps of it: to name it by, for a badge given by hand); a click copies it.
+  for (const [id, account] of [['accountId', auth], ['kickId', kickAuth]]) {
+    $(id).hidden = !account.userId;
+    $(id).textContent = account.userId ? `ID ${account.userId}` : '';
+  }
 
-  switchRow('highlightNameRow', settings.highlightName);
-  switchRow('mentionWordsRow', settings.mentionWords);
-  switchRow('autoOpenRow', settings.autoOpen);
-  switchRow('recentRow', settings.recentMessages);
-  switchRow('cardLogsRow', settings.cardLogs);
-  switchRow('offerSimulcastRow', settings.offerSimulcast);
-  switchRow('timestampsRow', settings.timestamps);
-  switchRow('badgesRow', settings.badges);
-  switchRow('altRowsRow', settings.altRows);
-  switchRow('cosmeticsRow', settings.cosmetics);
+  for (const [row, key] of SWITCHES) switchRow(row, settings[key]);
   // Live notifications ask Twitch which channels you follow: off, and saying so, until you're signed in.
   $('liveNotifyRow').disabled = !auth.token;
   switchRow('liveNotifyRow', settings.liveNotify && Boolean(auth.token));
-  switchRow('mentionNotifyRow', settings.mentionNotify);
-  switchRow('mentionSoundRow', settings.mentionSound);
-  switchRow('mentionFlashRow', settings.mentionFlash);
-  $('liveNotifyDesc').textContent = auth.token ? 'A desktop notification; click it to open the stream. For all of them, or the ones you choose below.' : 'Sign in to Twitch first (Accounts, above).';
-  renderLiveChannels();
-  applyTheme();
-  renderPreview();
-  renderData();
-  searchSettings(); // what was just drawn, filtered as the search says
-  for (const [id, key] of [['themeChoices', 'theme'], ['densityChoices', 'density'], ['fontChoices', 'chatFont']]) {
-    for (const btn of $(id).children) btn.setAttribute('aria-pressed', String(btn.dataset.value === settings[key]));
-  }
-  renderList('friendList', 'friends', 'No friends yet.', (login) => `Remove ${login} from friends`);
-  renderNicknames();
-  switchRow('holdAnywhereRow', settings.holdAnywhere);
-  switchRow('showPinnedRow', settings.showPinned);
-  switchRow('foldRow', settings.foldRepeats);
   // Similar messages fold only where repeats do.
   $('foldSimilarRow').disabled = !settings.foldRepeats;
   switchRow('foldSimilarRow', settings.foldSimilar && settings.foldRepeats);
-  switchRow('hideCommandsRow', settings.hideCommands);
-  switchRow('hideBotsRow', settings.hideBots);
-
+  $('liveNotifyDesc').textContent = auth.token ? 'A desktop notification; click it to open the stream. For all of them, or the ones you choose below.' : 'Sign in to Twitch first (Accounts, above).';
+  renderLiveChannels();
+  applyAppearance(settings); // this page wears it too, and the preview is the chat's own styles
+  renderPreview();
+  renderData();
+  searchSettings(); // what was just drawn, filtered as the search says
+  for (const [id, key] of [['themeChoices', 'theme'], ['densityChoices', 'density'], ['fontChoices', 'chatFont'], ['sizeChoices', 'fontSize'], ['emoteSizeChoices', 'emoteSize']]) {
+    for (const btn of $(id).children) btn.setAttribute('aria-pressed', String(btn.dataset.value === String(settings[key])));
+  }
+  renderList('friendList', 'friends', 'No friends yet.', (login) => `Remove ${login} from friends`);
+  renderList('nicknameList', 'nicknames', 'No nicknames yet.', ([login]) => `Remove your nickname for ${login}`, ([login, nick]) => {
+    const text = el('span');
+    text.append(login, el('span', 'nickname-arrow', ' → '), el('strong', '', nick));
+    return text;
+  });
   renderList('hiddenList', 'hiddenUsers', 'No one hidden.', (login) => `Show messages from ${login} again`);
   renderList('wordList', 'highlightWords', 'No words yet.', (word) => `Stop highlighting ${word}`);
   renderList('hiddenWordList', 'hiddenWords', 'No words yet.', (word) => `Stop hiding ${word}`);
   // Lengths as chips: "10m", its length in words on hover; the first (the quick one) marked with its key.
   renderList('modTimeoutList', 'modTimeouts', '', (s) => `Remove ${formatDuration(s)}`, (s) => {
-    const chip = Object.assign(document.createElement('span'), { textContent: shortDuration(s), title: formatDuration(s) });
-    if (s === settings.modTimeouts[0]) chip.append(' ', Object.assign(document.createElement('kbd'), { textContent: 'T', title: 'The quick one: T and the message buttons' }));
+    const chip = el('span', '', shortDuration(s));
+    chip.title = formatDuration(s);
+    if (s === settings.modTimeouts[0]) chip.append(' ', Object.assign(el('kbd', '', 'T'), { title: 'The quick one: T and the message buttons' }));
     return chip;
   });
-  renderList('modReasonList', 'modReasons', 'No reasons yet.', (r) => `Remove ${r}`, (r) => Object.assign(document.createElement('span'), { textContent: r }));
+  renderList('modReasonList', 'modReasons', 'No reasons yet.', (r) => `Remove ${r}`, (r) => el('span', '', r));
   // The last length can't go (a message's buttons need one).
   for (const remove of $('modTimeoutList').querySelectorAll('button')) remove.hidden = settings.modTimeouts.length === 1;
-  switchRow('modButtonsRow', settings.modButtons);
-  switchRow('modKeysRow', settings.modKeys);
-  switchRow('modLogRow', settings.modLog);
-  switchRow('raidProtectRow', settings.raidProtect);
-  switchRow('flagNewAccountsRow', settings.flagNewAccounts);
 
   $('emoteRows').replaceChildren(
     ...EMOTE_SETS.map(([key, name, site]) => {
-      const row = document.createElement('button');
-      row.type = 'button';
-      row.className = 'setting-row';
+      const row = button('setting-row', '', () => saveSettings({ emotes: { ...settings.emotes, [key]: !settings.emotes[key] } }));
       row.setAttribute('role', 'switch');
       row.setAttribute('aria-checked', String(settings.emotes[key]));
-      row.innerHTML = '<span class="setting-text"><span class="setting-title"></span><span class="setting-desc"></span></span><span class="switch" aria-hidden="true"></span>';
-      row.querySelector('.setting-title').textContent = name;
-      row.querySelector('.setting-desc').textContent = `Loads emote lists and images from ${site}.`;
-      row.addEventListener('click', () => saveSettings({ emotes: { ...settings.emotes, [key]: !settings.emotes[key] } }));
+      const knob = el('span', 'switch');
+      knob.setAttribute('aria-hidden', 'true');
+      row.append(settingText(name, `Loads emote lists and images from ${site}.`), knob);
       return row;
     }),
   );
-
-  for (const btn of $('sizeChoices').children) {
-    btn.setAttribute('aria-pressed', String(Number(btn.dataset.size) === settings.fontSize));
-  }
-  for (const btn of $('emoteSizeChoices').children) {
-    btn.setAttribute('aria-pressed', String(btn.textContent === settings.emoteSize));
-  }
+  drawn = true;
 }
 
 /* ---- Accounts: Twitch and Kick, each signed in with one click through Yapp Chat's app ---- */
@@ -294,9 +428,7 @@ function setBusy(button, text) {
   if (!button) return;
   if (text) {
     button.dataset.idle ??= button.innerHTML;
-    const spinner = document.createElement('span');
-    spinner.className = 'spinner';
-    button.replaceChildren(spinner, text);
+    button.replaceChildren(el('span', 'spinner'), text);
     button.classList.add('busy');
     button.disabled = true;
   } else if (button.dataset.idle) {
@@ -362,16 +494,14 @@ async function checkScopes() {
   const missing = info ? SCOPE_FEATURES.filter(([scope]) => !info.scopes?.includes(scope)) : [];
   box.hidden = !missing.length;
   if (!missing.length) return;
-  const list = document.createElement('ul');
-  list.append(...missing.map(([, what]) => Object.assign(document.createElement('li'), { textContent: what })));
-  const again = Object.assign(document.createElement('button'), { type: 'button', className: 'btn btn-primary btn-sm', textContent: 'Sign in again' });
-  again.addEventListener('click', () => signIn(again));
-  box.replaceChildren(
-    Object.assign(document.createElement('strong'), { textContent: 'Your sign-in is from before some features.' }),
-    Object.assign(document.createElement('p'), { textContent: 'Sign in again to turn on:' }),
-    list,
-    again,
-  );
+  const list = el('ul');
+  list.append(...missing.map(([, what]) => el('li', '', what)));
+  const again = button('btn btn-primary btn-sm', 'Sign in again', () => signIn(again));
+  box.replaceChildren(el('strong', '', 'Your sign-in is from before some features.'), el('p', '', 'Sign in again to turn on:'), list, again);
+}
+
+for (const [id, account, say] of [['accountId', () => auth, setStatus], ['kickId', () => kickAuth, setKickStatus]]) {
+  $(id).addEventListener('click', () => navigator.clipboard.writeText(String(account().userId)).then(() => say('Account ID copied.'), () => say("Couldn't copy it.", false)));
 }
 
 $('signOutBtn').addEventListener('click', async () => {
@@ -408,41 +538,18 @@ $('kickSignOutBtn').addEventListener('click', async () => {
 
 /* ---- Highlights, display ---- */
 
-$('highlightNameRow').addEventListener('click', () => saveSettings({ highlightName: !settings.highlightName }));
-$('mentionWordsRow').addEventListener('click', () => saveSettings({ mentionWords: !settings.mentionWords }));
-$('autoOpenRow').addEventListener('click', () => saveSettings({ autoOpen: !settings.autoOpen }));
-$('recentRow').addEventListener('click', () => saveSettings({ recentMessages: !settings.recentMessages }));
-$('cardLogsRow').addEventListener('click', () => saveSettings({ cardLogs: !settings.cardLogs }));
-$('offerSimulcastRow').addEventListener('click', () => saveSettings({ offerSimulcast: !settings.offerSimulcast }));
-$('timestampsRow').addEventListener('click', () => saveSettings({ timestamps: !settings.timestamps }));
-$('badgesRow').addEventListener('click', () => saveSettings({ badges: !settings.badges }));
-$('altRowsRow').addEventListener('click', () => saveSettings({ altRows: !settings.altRows }));
-$('cosmeticsRow').addEventListener('click', () => saveSettings({ cosmetics: !settings.cosmetics }));
-$('liveNotifyRow').addEventListener('click', () => saveSettings({ liveNotify: !settings.liveNotify }));
-$('mentionNotifyRow').addEventListener('click', () => saveSettings({ mentionNotify: !settings.mentionNotify }));
 // Turning the sound on plays it, so you know what it's like.
-$('mentionSoundRow').addEventListener('click', () => {
-  if (!settings.mentionSound) mentionPing();
-  saveSettings({ mentionSound: !settings.mentionSound });
-});
-$('mentionFlashRow').addEventListener('click', () => saveSettings({ mentionFlash: !settings.mentionFlash }));
+$('mentionSoundRow').addEventListener('click', () => !settings.mentionSound && mentionPing());
+for (const [row, key] of SWITCHES) $(row).addEventListener('click', () => saveSettings({ [key]: !settings[key] }));
 
 /* ---- Appearance preview ---- */
 
 /** A small chat drawn with the current appearance settings, using the chat's own styles. */
 function renderPreview() {
-  const root = document.documentElement;
-  root.dataset.density = settings.density;
-  root.style.setProperty('--chat-size', `${settings.fontSize}px`);
-  root.style.setProperty('--emote-scale', EMOTE_SIZES[settings.emoteSize]);
-  root.style.setProperty('--chat-font', CHAT_FONTS[settings.chatFont][1]);
-  root.classList.toggle('alt-rows', settings.altRows);
-  setNameTheme(root.dataset.theme === 'light');
-
   const emote = (id, name) => {
     const stack = el('span', 'emote-stack');
     const img = el('img', 'emote');
-    img.src = `https://static-cdn.jtvnw.net/emoticons/v2/${id}/default/dark/2.0`;
+    img.src = twitchEmoteUrl(id);
     img.alt = name;
     stack.append(img);
     return stack;
@@ -512,20 +619,13 @@ async function renderData() {
   ];
   $('dataRows').replaceChildren(
     ...rows.map(([title, count, noun, clear]) => {
-      const row = document.createElement('div');
-      row.className = 'setting-row static';
-      const text = document.createElement('span');
-      text.className = 'setting-text';
-      text.append(
-        Object.assign(document.createElement('span'), { className: 'setting-title', textContent: title }),
-        Object.assign(document.createElement('span'), { className: 'setting-desc', textContent: count ? `${count} ${noun}${count === 1 ? '' : 's'}` : 'Nothing saved' }),
-      );
-      const btn = Object.assign(document.createElement('button'), { type: 'button', className: 'btn btn-sm', textContent: 'Clear', disabled: !count });
-      btn.addEventListener('click', async () => {
+      const btn = button('btn btn-sm', 'Clear', async () => {
         await clear();
         renderData();
       });
-      row.append(text, btn);
+      btn.disabled = !count;
+      const row = el('div', 'setting-row static');
+      row.append(settingText(title, count ? `${count} ${noun}${count === 1 ? '' : 's'}` : 'Nothing saved'), btn);
       return row;
     }),
   );
@@ -686,8 +786,7 @@ const panels = [...document.querySelectorAll('.panel')];
 
 // One highlight behind the current link, sliding from one to the next (placed without sliding the first time).
 const nav = document.querySelector('.nav');
-const marker = document.createElement('span');
-marker.className = 'nav-marker';
+const marker = el('span', 'nav-marker');
 nav.prepend(marker);
 let markedId = null;
 const markSection = (id) => {
@@ -747,22 +846,15 @@ addEventListener('scroll', updateSection, { passive: true });
 addEventListener('resize', updateSection);
 updateSection();
 
-/** This page follows the theme too. */
-function applyTheme() {
-  const light = settings.theme === 'light' || (settings.theme === 'system' && matchMedia('(prefers-color-scheme: light)').matches);
-  document.documentElement.dataset.theme = light ? 'light' : 'dark';
-}
-matchMedia('(prefers-color-scheme: light)').addEventListener('change', applyTheme);
+// This page follows the theme too: "System", when the system switches.
+matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => applyAppearance(settings));
 
 /** Segmented choices: [label, value] → saves `key`. */
 function choices(id, key, options) {
   $(id).replaceChildren(
     ...options.map(([label, value]) => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.textContent = label;
+      const btn = button('', label, () => saveSettings({ [key]: value }));
       btn.dataset.value = value;
-      btn.addEventListener('click', () => saveSettings({ [key]: value }));
       return btn;
     }),
   );
@@ -770,68 +862,41 @@ function choices(id, key, options) {
 choices('themeChoices', 'theme', [['Dark', 'dark'], ['Light', 'light'], ['System', 'system']]);
 choices('densityChoices', 'density', [['Comfortable', 'comfortable'], ['Compact', 'compact']]);
 choices('fontChoices', 'chatFont', Object.entries(CHAT_FONTS).map(([value, [label]]) => [label, value]));
+choices('sizeChoices', 'fontSize', Object.entries(FONT_SIZES));
+choices('emoteSizeChoices', 'emoteSize', Object.keys(EMOTE_SIZES).map((label) => [label, label]));
 
-$('friendForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const login = $('friendInput').value.trim().replace(/^@/, '').toLowerCase();
-  if (!login) return;
-  if (!settings.friends.includes(login)) await saveSettings({ friends: [...settings.friends, login] });
-  $('friendInput').value = '';
-});
-/** Friends → Nicknames: who, and your name for them, each with a ✕ (as renderList's lists, from an object). */
-function renderNicknames() {
-  const items = Object.entries(settings.nicknames).map(([login, nick]) => {
-    const li = el('li');
-    const text = el('span');
-    text.append(login, el('span', 'nickname-arrow', ' → '), el('strong', '', nick));
-    const remove = el('button', 'btn btn-ghost btn-icon');
-    remove.type = 'button';
-    remove.title = 'Remove';
-    remove.setAttribute('aria-label', `Remove your nickname for ${login}`);
-    remove.append(icon('x'));
-    remove.addEventListener('click', () => {
-      const { [login]: gone, ...rest } = settings.nicknames;
-      saveSettings({ nicknames: rest });
-    });
-    li.append(text, remove);
-    return li;
+// Friends, and people whose messages don't show: a name added to its list.
+for (const [form, input, key] of [['friendForm', 'friendInput', 'friends'], ['hideForm', 'hideInput', 'hiddenUsers']]) {
+  $(form).addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const login = cleanLogin($(input).value);
+    if (!login) return;
+    if (!settings[key].includes(login)) await saveSettings({ [key]: [...settings[key], login] });
+    $(input).value = '';
   });
-  $('nicknameList').replaceChildren(...(items.length ? items : [Object.assign(el('li', 'none'), { textContent: 'No nicknames yet.' })]));
 }
 $('nicknameForm').addEventListener('submit', async (e) => {
   e.preventDefault();
-  const login = $('nicknameLogin').value.trim().replace(/^@/, '').toLowerCase();
+  const login = cleanLogin($('nicknameLogin').value);
   const nick = $('nicknameInput').value.trim();
   if (!login || !nick) return ($('nicknameError').textContent = 'Their name, and your nickname for them.');
-  if (Object.keys(settings.nicknames).length >= 200 && !Object.hasOwn(settings.nicknames, login)) return ($('nicknameError').textContent = 'Two hundred nicknames at most: remove one first.');
+  if (Object.keys(settings.nicknames).length >= LIMITS.nicknames && !Object.hasOwn(settings.nicknames, login)) return ($('nicknameError').textContent = 'Two hundred nicknames at most: remove one first.');
   await saveSettings({ nicknames: { ...settings.nicknames, [login]: nick } });
   $('nicknameLogin').value = $('nicknameInput').value = '';
   $('nicknameError').textContent = '';
 });
-$('holdAnywhereRow').addEventListener('click', () => saveSettings({ holdAnywhere: !settings.holdAnywhere }));
-$('showPinnedRow').addEventListener('click', () => saveSettings({ showPinned: !settings.showPinned }));
-$('foldRow').addEventListener('click', () => saveSettings({ foldRepeats: !settings.foldRepeats }));
-$('foldSimilarRow').addEventListener('click', () => saveSettings({ foldSimilar: !settings.foldSimilar }));
+for (const id of ['nicknameLogin', 'nicknameInput']) $(id).addEventListener('input', () => ($('nicknameError').textContent = ''));
 
 /* ---- Hidden ---- */
 
 $('botNames').textContent = `${COMMON_BOTS.slice(0, 5).join(', ')} and ${COMMON_BOTS.length - 5} more.`;
-$('hideCommandsRow').addEventListener('click', () => saveSettings({ hideCommands: !settings.hideCommands }));
-$('hideBotsRow').addEventListener('click', () => saveSettings({ hideBots: !settings.hideBots }));
-$('hideForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const login = $('hideInput').value.trim().replace(/^@/, '').toLowerCase();
-  if (!login) return;
-  if (!settings.hiddenUsers.includes(login)) await saveSettings({ hiddenUsers: [...settings.hiddenUsers, login] });
-  $('hideInput').value = '';
-});
 
 /* ---- Highlight and hide words: words, phrases or /regexes/ ---- */
 
 /** Add a word, phrase or /regex/ to settings[key]; false (saying why under its form, errorId) for a broken regex. */
 async function addEntry(key, entry, errorId) {
-  if (entry.length > 200) {
-    $(errorId).textContent = 'At most 200 characters.';
+  if (entry.length > LIMITS.entryLength) {
+    $(errorId).textContent = `At most ${LIMITS.entryLength} characters.`;
     return false;
   }
   try {
@@ -883,7 +948,7 @@ $('modTimeoutForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const seconds = parseDuration($('modTimeoutInput').value);
   if (!seconds) return ($('modTimeoutError').textContent = 'A length like 30s, 10m, 1h, 1d or 1w, up to 2 weeks.');
-  if (settings.modTimeouts.length >= 6 && !settings.modTimeouts.includes(seconds)) return ($('modTimeoutError').textContent = 'Six lengths at most: remove one first.');
+  if (settings.modTimeouts.length >= LIMITS.modTimeouts && !settings.modTimeouts.includes(seconds)) return ($('modTimeoutError').textContent = 'Six lengths at most: remove one first.');
   await saveSettings({ modTimeouts: [...new Set([...settings.modTimeouts, seconds])] });
   $('modTimeoutInput').value = '';
   $('modTimeoutError').textContent = '';
@@ -892,14 +957,12 @@ $('modTimeoutInput').addEventListener('input', () => ($('modTimeoutError').textC
 $('modReasonForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const reason = $('modReasonInput').value.trim();
-  if (settings.modReasons.length >= 12 && !settings.modReasons.includes(reason)) return ($('modReasonError').textContent = 'Twelve reasons at most: remove one first.');
-  if (reason) await saveSettings({ modReasons: [...new Set([...settings.modReasons, reason])] });
+  if (!reason) return;
+  if (settings.modReasons.length >= LIMITS.modReasons && !settings.modReasons.includes(reason)) return ($('modReasonError').textContent = 'Twelve reasons at most: remove one first.');
+  await saveSettings({ modReasons: [...new Set([...settings.modReasons, reason])] });
   $('modReasonInput').value = '';
 });
 $('modReasonInput').addEventListener('input', () => ($('modReasonError').textContent = ''));
-for (const [row, key] of [['modButtonsRow', 'modButtons'], ['modKeysRow', 'modKeys'], ['modLogRow', 'modLog'], ['raidProtectRow', 'raidProtect'], ['flagNewAccountsRow', 'flagNewAccounts']]) {
-  $(row).addEventListener('click', () => saveSettings({ [key]: !settings[key] }));
-}
 
 for (const [form, input, key, error] of [['wordForm', 'wordInput', 'highlightWords', 'wordError'], ['hideWordForm', 'hideWordInput', 'hiddenWords', 'hideWordError']]) {
   $(form).addEventListener('submit', async (e) => {
@@ -976,28 +1039,12 @@ $('hideWordBuilder').append(patternBuilder('hiddenWords', 'hideWordError'));
 // Every folded part (.fold: "Build a regex", Moderation's commands, the channels that notify): a chevron that turns.
 for (const summary of document.querySelectorAll('.fold > summary')) summary.append(icon('chevron-down', 'icon fold-chevron'));
 
-$('sizeChoices').replaceChildren(
-  ...Object.entries(FONT_SIZES).map(([label, size]) => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.textContent = label;
-    btn.dataset.size = size;
-    btn.addEventListener('click', () => saveSettings({ fontSize: size }));
-    return btn;
-  }),
-);
-
-$('emoteSizeChoices').replaceChildren(
-  ...Object.keys(EMOTE_SIZES).map((label) => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.textContent = label;
-    btn.addEventListener('click', () => saveSettings({ emoteSize: label }));
-    return btn;
-  }),
-);
-
 chrome.storage.onChanged.addListener(async (changes, area) => {
+  // You, as the service says (lib/paints.js cosmeticsMine): the paint and badge pickers again.
+  if (area === 'local' && changes.cosmeticsMine) {
+    cosmeticsMine = changes.cosmeticsMine.newValue || {};
+    renderPaints();
+  }
   const signIns = area === 'local' && (changes.twitchAuth || changes.kickAuth);
   // Notes, emotes used, mentions (chats write these all the time): only their counts.
   if ((area === 'local' && !signIns) || (area === 'sync' && Object.keys(changes).every(isNotesKey))) return renderData();
@@ -1014,5 +1061,18 @@ chrome.storage.onChanged.addListener(async (changes, area) => {
 
 $('versionTag').textContent = `v${chrome.runtime.getManifest().version}`;
 $('aboutVersion').textContent = `Yapp Chat ${chrome.runtime.getManifest().version}`;
-render();
+try {
+  render();
+} catch (error) {
+  document.documentElement.dataset.ready = ''; // whatever went wrong drawing it, the page isn't left hidden
+  throw error;
+}
 checkScopes();
+// The service's catalogue may add badges and paints to this version's (lib/paints.js), and says whether Discord can
+// be linked: the pickers again, with it. Asked for here when it's five minutes old: you came to look.
+const catalogued = useCatalog(renderPaints).catch(() => {});
+// Shown now, whole (options.css hides the page until data-ready): with what the kept catalogue adds and your pictures
+// loaded, so nothing pops in or pushes the page down; not waiting long for a picture.
+const pictured = [...document.querySelectorAll('.account-pic img[src]')].map((img) => img.decode().catch(() => {}));
+Promise.race([Promise.all([catalogued, ...pictured]), new Promise((resolve) => setTimeout(resolve, 300))]).then(() => (document.documentElement.dataset.ready = ''));
+if (settings.cosmetics) refreshCatalog(Date.now(), 5 * 60_000).catch(() => {});

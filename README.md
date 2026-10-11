@@ -13,13 +13,13 @@ A free, open-source Chrome and Brave extension. No account needed, no tracking.
 - 🌊 **A busy chat you can actually read.** Copypasta folds into one line (`×47`), even when people add invisible characters or stretch their letters to get past Twitch's duplicate check. Turn on *Fold similar messages* and whole reaction waves fold too: "all 3 dead", "ALL 3 DED" and "u got all 3" become one line, `×38 similar`, with every version and who sent it one hover away. In a merged chat it folds across platforms: a simulcast's "W" from Twitch, Kick and YouTube is one line.
 - 🧩 **Several chats at once.** Put chats side by side in their own window, or merge a few channels into one chat (even Twitch and YouTube together).
 - 😂 **Every emote.** Twitch, 7TV, BetterTTV and FrankerFaceZ emotes, with a picker, favourites and `:` suggestions as you type. Hover one for a big preview.
-- 🎨 **Paints and badges.** 7TV name paints and badges show up live, plus BetterTTV and FrankerFaceZ badges.
+- 🎨 **Paints and badges.** Pick a paint for your own name, free, and everyone on Yapp Chat sees it, with badges to collect. 7TV name paints and badges show up live too, plus BetterTTV and FrankerFaceZ badges.
 - 🪪 **User cards.** Click a name to see their account age, followers, earlier names, timeouts and bans, and their chat logs, with search.
 - 🔔 **Mentions.** Messages with your name collect in one inbox (your highlight words too, if you like), with a count on the toolbar icon.
 - 🧘 **A calmer chat.** Hide bots, `!commands`, people you don't want to read, or messages with certain words. Highlights and hidden words take regexes too, with a small builder to make them.
 - ⏸️ **It holds still.** The chat stops scrolling while you hover a name, read a reply or open a card, so nothing jumps away from you.
 - 💬 **Follow a conversation.** Click a reply for the whole back-and-forth in one place, emotes and all, and jump to any message in it.
-- 🏆 **Predictions, polls and pins.** A channel's prediction, poll and pinned message sit above the chat on Twitch and Kick, with the shares, the time left and the result.
+- 🏆 **Predictions, polls and pins.** A channel's prediction, poll and pinned message sit above the chat on Twitch and Kick (YouTube: the pinned message), with the shares, the time left and the result. Fold any to one line.
 - 🛡️ **Mod tools, on Twitch and Kick.** Delete, time out (your own lengths and reasons) and ban from the message itself, its menu, the user card or a key (D, T, B). Lift a timeout from its line.
   - ⌨️ `/commands` in the message box with suggestions: `/timeout name 10m spam`, `/ban`, `/unban`, `/warn`, `/slow`, `/followers`, `/shield`, `/announce`, `/shoutout`… Some are for everyone (`/clip`, `/block`, `/w`), some for your own channel (`/mod`, `/vip`, `/raid`, `/commercial`, `/marker`).
   - 👀 See what other mods do: who timed out whom and why, chat mode changes, warnings.
@@ -76,7 +76,7 @@ The full policy is at [yapp.chat/privacy](https://yapp.chat/privacy).
 | `lib/chat.js`                                    | The heart of it: one chat pane, its messages, input and menus |
 | `lib/card.js`                                    | The user card                                                 |
 | `lib/twitch.js`, `lib/kick.js`, `lib/youtube.js` | Talking to each platform                                      |
-| `lib/emotes.js`, `lib/cosmetics.js`              | Emotes, paints and badges                                     |
+| `lib/emotes.js`, `lib/cosmetics.js`, `lib/paints.js` | Emotes, paints (7TV's, Yapp Chat's own) and badges        |
 | `icons/`                                         | The duck 🦆                                                   |
 
 

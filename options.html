@@ -9,11 +9,12 @@
   <link rel="stylesheet" href="options.css">
 </head>
 <body>
+  <!-- Not shown until options.js has drawn it as it is for you (data-ready on the root; options.css). -->
   <div class="settings">
     <!-- Sections, always in view (tabs along the top on narrow windows). -->
     <nav class="nav" aria-label="Settings sections">
       <div class="nav-brand">
-        <img src="icons/icon48.png" alt="" width="32" height="32">
+        <img src="icons/mark.svg" alt="" width="32" height="32">
         <div>
           <h1>Yapp Chat</h1>
           <span class="muted" id="versionTag"></span>
@@ -49,10 +50,12 @@
         <div id="signedIn" class="account" hidden>
           <div class="account-who">
             <span class="source-pic account-pic" id="accountPic"><img class="source-avatar" alt=""></span>
-            <div><strong id="accountName"></strong><span class="account-sub">Signed in to Twitch</span></div>
+            <div><strong id="accountName"></strong><span class="account-sub">Signed in to Twitch<button type="button" class="account-id" id="accountId" title="Copy your account ID" hidden></button></span></div>
           </div>
           <button type="button" class="btn" id="signOutBtn">Sign out</button>
         </div>
+        <!-- Your name's paint, for everyone on Yapp Chat to see (options.js renderPaints; lib/paints.js). -->
+        <div class="paint-picker" id="twitchPaints" hidden></div>
 
         <div id="signedOut">
           <!-- Yapp Chat's own Twitch app (lib/apps.js), through yapp.chat's token service: one click. -->
@@ -67,10 +70,11 @@
         <div id="kickSignedIn" class="account" hidden>
           <div class="account-who">
             <span class="source-pic account-pic" id="kickPic"><img class="source-avatar" alt=""></span>
-            <div><strong id="kickName"></strong><span class="account-sub">Signed in to Kick</span></div>
+            <div><strong id="kickName"></strong><span class="account-sub">Signed in to Kick<button type="button" class="account-id" id="kickId" title="Copy your account ID" hidden></button></span></div>
           </div>
           <button type="button" class="btn" id="kickSignOutBtn">Sign out</button>
         </div>
+        <div class="paint-picker" id="kickPaints" hidden></div>
 
         <div id="kickSignedOut">
           <!-- Yapp Chat's own Kick app (lib/apps.js), through yapp.chat's token service: one click. -->
@@ -80,52 +84,65 @@
         </div>
         <p class="status-msg" id="kickStatus" role="status"></p>
         </div>
-        <!-- Both platforms hand out sign-ins only with the app's secret, which the token service adds: the policy says more. -->
-        <p class="accounts-note">Sign-ins pass through yapp.chat, which keeps nothing.</p>
+        <!-- Both platforms hand out sign-ins only with the app's secret, which the token service adds; the cosmetics service (lib/paints.js) keeps the account's id. The policy says more. -->
+        <p class="accounts-note">Sign-ins pass through yapp.chat, which doesn't keep them. It keeps your account's public ID, for name paints and badges.</p>
       </section>
 
       <section class="panel" id="chat" aria-labelledby="chat-h">
         <h2 id="chat-h">Chat</h2>
         <p class="card-desc">How chats open and behave.</p>
+        <!-- Three groups (nine switches in a row were hard to follow): how a chat opens, what's in it, and keeping up with a busy one. -->
+        <h3>Opening a chat</h3>
         <div class="card nested">
-  <button type="button" class="setting-row" id="autoOpenRow" role="switch" aria-checked="false">
+          <button type="button" class="setting-row" id="autoOpenRow" role="switch" aria-checked="false">
             <span class="setting-text"><span class="setting-title">Open on live streams</span>
               <span class="setting-desc">The side panel opens when you first click a live Twitch, Kick or YouTube stream.</span></span>
             <span class="switch" aria-hidden="true"></span>
           </button>
-  <button type="button" class="setting-row" id="recentRow" role="switch" aria-checked="false">
-            <span class="setting-text"><span class="setting-title">Show recent messages</span>
-              <span class="setting-desc">A chat opens with its last messages instead of empty.</span></span>
-            <span class="switch" aria-hidden="true"></span>
-          </button>
-  <button type="button" class="setting-row" id="showPinnedRow" role="switch" aria-checked="false">
-            <span class="setting-text"><span class="setting-title">Pinned messages, polls and predictions</span>
-              <span class="setting-desc">Above the chat, as on Twitch and Kick, with live results. To vote or predict, go to their site.</span></span>
-            <span class="switch" aria-hidden="true"></span>
-          </button>
-  <button type="button" class="setting-row" id="holdAnywhereRow" role="switch" aria-checked="false">
-            <span class="setting-text"><span class="setting-title">Hold the chat anywhere under the pointer</span>
-              <span class="setting-desc">It always holds still over names, links and replies. With this, anywhere you move the pointer over it, until it rests a moment.</span></span>
-            <span class="switch" aria-hidden="true"></span>
-          </button>
-  <button type="button" class="setting-row" id="foldRow" role="switch" aria-checked="false">
-            <span class="setting-text"><span class="setting-title">Fold repeated messages</span>
-              <span class="setting-desc">The same message within a minute adds "×2" to the first. Point at it to see who sent it.</span></span>
-            <span class="switch" aria-hidden="true"></span>
-          </button>
-  <button type="button" class="setting-row" id="foldSimilarRow" role="switch" aria-checked="false">
-            <span class="setting-text"><span class="setting-title">Fold similar messages</span>
-              <span class="setting-desc">For busy chats: messages that mostly say the same ("all 3 dead", "ALL 3 DED") fold into one, "×9 similar". Point at it to read every version.</span></span>
-            <span class="switch" aria-hidden="true"></span>
-          </button>
-  <button type="button" class="setting-row" id="cardLogsRow" role="switch" aria-checked="false">
-            <span class="setting-text"><span class="setting-title">Chat logs in user cards</span>
-              <span class="setting-desc">Someone's earlier messages in the channel, from public chat logs.</span></span>
+          <button type="button" class="setting-row" id="twitchButtonRow" role="switch" aria-checked="false">
+            <span class="setting-text"><span class="setting-title">Yapp Chat button on Twitch</span>
+              <span class="setting-desc">A duck in Twitch's top bar, beside its own buttons, that opens the chat in the side panel.</span></span>
             <span class="switch" aria-hidden="true"></span>
           </button>
           <button type="button" class="setting-row" id="offerSimulcastRow" role="switch" aria-checked="false">
             <span class="setting-text"><span class="setting-title">Offer to combine a streamer's chats</span>
-              <span class="setting-desc">When the streamer of a chat you open is live on Twitch, Kick or YouTube at the same time, a bar offers to show those chats in one.</span></span>
+              <span class="setting-desc">When a streamer is live on more than one platform, a bar offers to show their chats as one.</span></span>
+            <span class="switch" aria-hidden="true"></span>
+          </button>
+        </div>
+        <h3>In a chat</h3>
+        <div class="card nested">
+          <button type="button" class="setting-row" id="recentRow" role="switch" aria-checked="false">
+            <span class="setting-text"><span class="setting-title">Show recent messages</span>
+              <span class="setting-desc">A chat opens with its last messages instead of empty.</span></span>
+            <span class="switch" aria-hidden="true"></span>
+          </button>
+          <button type="button" class="setting-row" id="showPinnedRow" role="switch" aria-checked="false">
+            <span class="setting-text"><span class="setting-title">Pinned messages, polls and predictions</span>
+              <span class="setting-desc">Above the chat, as on Twitch and Kick, with live results (on YouTube, the pinned message). To vote or predict, go to their site.</span></span>
+            <span class="switch" aria-hidden="true"></span>
+          </button>
+          <button type="button" class="setting-row" id="cardLogsRow" role="switch" aria-checked="false">
+            <span class="setting-text"><span class="setting-title">Chat logs in user cards</span>
+              <span class="setting-desc">Someone's earlier messages in the channel, from public chat logs.</span></span>
+            <span class="switch" aria-hidden="true"></span>
+          </button>
+        </div>
+        <h3>Busy chats</h3>
+        <div class="card nested">
+          <button type="button" class="setting-row" id="holdAnywhereRow" role="switch" aria-checked="false">
+            <span class="setting-text"><span class="setting-title">Pause chat wherever the pointer is</span>
+              <span class="setting-desc">Chat always pauses while you point at a name, link or reply. With this, it pauses while the pointer moves anywhere over it.</span></span>
+            <span class="switch" aria-hidden="true"></span>
+          </button>
+          <button type="button" class="setting-row" id="foldRow" role="switch" aria-checked="false">
+            <span class="setting-text"><span class="setting-title">Fold repeated messages</span>
+              <span class="setting-desc">The same message within a minute adds "×2" to the first. Point at it to see who sent it.</span></span>
+            <span class="switch" aria-hidden="true"></span>
+          </button>
+          <button type="button" class="setting-row" id="foldSimilarRow" role="switch" aria-checked="false">
+            <span class="setting-text"><span class="setting-title">Fold similar messages</span>
+              <span class="setting-desc">For busy chats: messages that mostly say the same ("all 3 dead", "ALL 3 DED") fold into one, "×9 similar". Point at it to read every version.</span></span>
             <span class="switch" aria-hidden="true"></span>
           </button>
         </div>
@@ -167,8 +184,8 @@
               <span class="switch" aria-hidden="true"></span>
             </button>
     <button type="button" class="setting-row" id="cosmeticsRow" role="switch" aria-checked="false">
-              <span class="setting-text"><span class="setting-title">Cosmetics</span>
-                <span class="setting-desc">7TV name paints and 7TV, BetterTTV and FrankerFaceZ badges.</span></span>
+              <span class="setting-text"><span class="setting-title">Name paints and extra badges</span>
+                <span class="setting-desc">Yapp Chat's and 7TV's name paints, and 7TV, BetterTTV and FrankerFaceZ badges. Off: none show, yours included, and yapp.chat isn't asked about them.</span></span>
               <span class="switch" aria-hidden="true"></span>
             </button>
     <button type="button" class="setting-row" id="altRowsRow" role="switch" aria-checked="false">
@@ -197,8 +214,8 @@
             <span class="switch" aria-hidden="true"></span>
           </button>
           <button type="button" class="setting-row" id="mentionWordsRow" role="switch" aria-checked="false">
-            <span class="setting-text"><span class="setting-title">Also collect highlight words in Mentions</span>
-              <span class="setting-desc">Messages with your words go to the inbox (and its notifications) too, not only those with your name.</span></span>
+            <span class="setting-text"><span class="setting-title">Highlight words count as mentions</span>
+              <span class="setting-desc">Messages with your words go to the inbox and its notifications too, not only those with your name.</span></span>
             <span class="switch" aria-hidden="true"></span>
           </button>
         </div>
@@ -288,7 +305,7 @@
             <span class="switch" aria-hidden="true"></span>
           </button>
           <button type="button" class="setting-row" id="modKeysRow" role="switch" aria-checked="false">
-            <span class="setting-text"><span class="setting-title">Keys</span>
+            <span class="setting-text"><span class="setting-title">Keyboard shortcuts</span>
               <span class="setting-desc">On the message you point at: <kbd>D</kbd> deletes it, <kbd>T</kbd> times them out, <kbd>B</kbd> bans them.</span></span>
             <span class="switch" aria-hidden="true"></span>
           </button>
@@ -323,6 +340,8 @@
 
       <section class="panel" id="notifications" aria-labelledby="notifications-h">
         <h2 id="notifications-h">Notifications</h2>
+        <p class="card-desc">When a channel you follow goes live, and when someone mentions you.</p>
+        <h3>Going live</h3>
         <div class="card nested">
           <button type="button" class="setting-row" id="liveNotifyRow" role="switch" aria-checked="false">
             <span class="setting-text"><span class="setting-title">Notify when channels I follow go live</span>
@@ -342,6 +361,7 @@
             <ul class="item-list live-list" id="liveList" aria-label="Channels you follow"></ul>
           </div>
         </details>
+        <h3>Mentions</h3>
         <div class="card nested">
           <button type="button" class="setting-row" id="mentionNotifyRow" role="switch" aria-checked="false">
             <span class="setting-text"><span class="setting-title">Notify me of mentions</span>
@@ -395,9 +415,17 @@
 
       <section class="panel" id="privacy" aria-labelledby="privacy-h">
         <h2 id="privacy-h">Privacy &amp; data</h2>
-        <p class="card-desc">No ads, no analytics, nothing collected. Yapp Chat talks only to Twitch, Kick and YouTube, the emote services, the public recent-messages and chat log services, and yapp.chat for signing in with Yapp Chat's apps, and only to show your chats. What each one is for: <a href="https://yapp.chat/privacy" target="_blank" rel="noopener noreferrer">the privacy policy</a>.</p>
-        <h3>Kept by Yapp Chat</h3>
+        <p class="card-desc">No ads, no analytics, no tracking. Yapp Chat talks only to Twitch, Kick and YouTube, the emote services, the public recent-messages and chat log services, and yapp.chat, and only to show your chats. <a href="https://yapp.chat/privacy" target="_blank" rel="noopener noreferrer">The privacy policy</a> says what each one is for.</p>
+        <h3>Kept in your browser</h3>
         <div class="card nested" id="dataRows"></div>
+        <!-- What the cosmetics service keeps (PRIVACY.md says it in full): said here too, beside what the browser keeps. -->
+        <h3>Kept on yapp.chat</h3>
+        <div class="card nested">
+          <div class="setting-row static">
+            <span class="setting-text"><span class="setting-title">Your accounts' public IDs</span>
+              <span class="setting-desc">For each Twitch or Kick account you sign in with, while name paints and extra badges are on (Appearance): its public ID, its paint and badges, and your Discord account if you linked one. No email, and no sign-in.</span></span>
+          </div>
+        </div>
         <h3>Backup</h3>
         <p class="card-desc">With browser sync on, your settings and notes follow your browser profile. For another browser, save them to a file and load it there (sign-ins aren't included).</p>
         <div class="backup-row">

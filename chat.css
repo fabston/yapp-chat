@@ -8,6 +8,7 @@
   --first: #c832c8; /* someone's first message in a channel */
   --first-soft: rgba(200, 50, 200, 0.1);
   --friend: #ffca28; /* friends' gold: their stripe and star */
+  --loud-light: rgb(255 255 255 / 0.28); /* what crosses a loud notice's line (a big gift, a big cheer) */
 }
 
 /* Kick's green and the friends' gold are too light to read on white; the magenta a touch darker, for the label. */
@@ -16,6 +17,7 @@
   --first: #b42db4;
   --first-soft: rgba(200, 50, 200, 0.08);
   --friend: #b07d00;
+  --loud-light: rgb(255 255 255 / 0.75);
 }
 
 .pane {
@@ -45,11 +47,11 @@
 }
 
 .feed-chip {
-  display: inline-flex;
+  display: flex;
+  flex: 1 1 auto; /* the header's room: the name has what the rest leaves */
   align-items: center;
   gap: 8px;
   min-width: 0;
-  max-width: 100%;
 }
 
 /* The platform before a chat's name: a tile in its colour, the same size for each (lib/ui.js platformTile).
@@ -331,19 +333,63 @@
   height: 12px;
 }
 
-/* Short of room, "Reconnecting…" gives way (shortened) before the chat's name, live info and modes. */
+/* "Connecting…", "Reconnecting…", "Offline": a mark that always fits (a spinner while it's on its way, a dot when
+   something's wrong) with its words beside it; a narrow pane keeps the mark and leaves the words to a hover. */
 .pane-status {
-  flex: 0 1000 auto;
-  min-width: 0;
-  overflow: hidden;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px;
   font-size: 11px;
   color: var(--muted);
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .pane-status[data-tone="warn"] {
   color: var(--warn);
+}
+
+.status-mark {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  background: currentColor;
+  border-radius: 50%;
+}
+
+.pane-status[data-busy="true"] .status-mark {
+  width: 11px;
+  height: 11px;
+  background: none;
+  border: 1.5px solid color-mix(in srgb, currentColor 30%, transparent);
+  border-top-color: currentColor;
+  animation: status-spin 0.8s linear infinite;
+}
+
+@keyframes status-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* A combined chat names the channel too: that much of it. */
+.status-text {
+  max-width: 24ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@container pane (max-width: 440px) {
+  .status-text {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pane-status[data-busy="true"] .status-mark {
+    animation: none;
+  }
 }
 
 .pane-actions {
@@ -554,6 +600,134 @@
   border-radius: 999px;
 }
 
+/* A notice that's louder (lib/notices.js loudness: many subs gifted at once, 20, 50, 100, 200; many bits cheered,
+   1,000, 5,000, 10,000, 100,000; level 1 also for a sub gifted to you), each level more than the one before: more
+   colour (its own, into a second one, then every colour moving), a bigger icon and count, and light crossing the
+   line: once, twice, then every few seconds; from level 3 the icon beats too. Still for those who asked for less
+   motion. */
+.msg.notice[data-loud] {
+  --loud-to: var(--notice);
+  --loud-ink: var(--notice); /* the count's colour */
+  --loud-tint: 17%;
+  --loud-icon: 22px;
+  --loud-count: 1.08em;
+  background:
+    linear-gradient(110deg, transparent 42%, var(--loud-light) 50%, transparent 58%) 160% 0 / 250% 100% no-repeat,
+    linear-gradient(90deg, color-mix(in srgb, var(--notice) var(--loud-tint), transparent), color-mix(in srgb, var(--loud-to) var(--loud-tint), transparent));
+  border-image: linear-gradient(var(--notice), var(--loud-to)) 1;
+  animation: loud-light 1.4s ease-in-out 0.15s 1;
+}
+
+/* Into a lighter shade of its colour (a cheer's is its tier's); a gift's pink into purple, then gold. */
+.msg.notice[data-loud="2"] {
+  --loud-to: color-mix(in srgb, var(--notice) 55%, #fff);
+  --loud-tint: 24%;
+  --loud-icon: 24px;
+  --loud-count: 1.16em;
+  animation-iteration-count: 2;
+}
+
+.msg.notice[data-loud="3"] {
+  --loud-to: color-mix(in srgb, var(--notice) 40%, #fff);
+  --loud-tint: 30%;
+  --loud-icon: 26px;
+  --loud-count: 1.24em;
+  animation: loud-light-again 4s ease-in-out 0.15s infinite;
+}
+
+.msg.notice[data-event="gifts"][data-loud="2"] {
+  --loud-to: #a970ff;
+  --loud-ink: #a970ff;
+}
+
+.msg.notice[data-event="gifts"][data-loud="3"] {
+  --loud-to: #ffb020;
+  --loud-ink: #ffb020;
+}
+
+/* The most: every colour, flowing under the light. */
+.msg.notice[data-loud="4"] {
+  --loud-to: #ffb020;
+  --loud-ink: #ffb020;
+  --loud-tint: 34%;
+  --loud-icon: 28px;
+  --loud-count: 1.32em;
+  background:
+    linear-gradient(110deg, transparent 42%, var(--loud-light) 50%, transparent 58%) 160% 0 / 250% 100% no-repeat,
+    linear-gradient(90deg, color-mix(in srgb, #ff6bb5 var(--loud-tint), transparent), color-mix(in srgb, #ffb020 var(--loud-tint), transparent), color-mix(in srgb, #4ad6c5 var(--loud-tint), transparent), color-mix(in srgb, #a970ff var(--loud-tint), transparent), color-mix(in srgb, #ff6bb5 var(--loud-tint), transparent)) 0 0 / 200% 100%;
+  border-image: linear-gradient(#ff6bb5, #ffb020, #4ad6c5, #a970ff) 1;
+  animation: loud-flow 4s linear infinite;
+}
+
+.msg.notice[data-loud] .notice-icon {
+  width: var(--loud-icon);
+  height: var(--loud-icon);
+  background: linear-gradient(135deg, var(--notice), var(--loud-to));
+}
+
+.msg.notice[data-loud] .notice-icon .icon {
+  width: 60%;
+  height: 60%;
+}
+
+.msg.notice[data-loud="3"] .notice-icon,
+.msg.notice[data-loud="4"] .notice-icon {
+  animation: loud-beat 1.6s ease-in-out infinite;
+}
+
+.msg.notice[data-loud] .loud-count {
+  font-size: var(--loud-count);
+  color: color-mix(in srgb, var(--loud-ink) 60%, var(--text));
+}
+
+@keyframes loud-light {
+  to {
+    background-position: -60% 0, 0 0;
+  }
+}
+
+/* The same, with a rest after it. */
+@keyframes loud-light-again {
+  35%,
+  100% {
+    background-position: -60% 0, 0 0;
+  }
+}
+
+@keyframes loud-flow {
+  0% {
+    background-position: 160% 0, 0 0;
+  }
+
+  35% {
+    background-position: -60% 0, -70% 0;
+  }
+
+  100% {
+    background-position: -60% 0, -200% 0;
+  }
+}
+
+@keyframes loud-beat {
+  50% {
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--loud-to) 0%, transparent);
+    transform: scale(1.12);
+  }
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--loud-to) 55%, transparent);
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .msg.notice[data-loud],
+  .msg.notice[data-loud] .notice-icon {
+    animation: none;
+  }
+}
+
 .msg.system {
   color: var(--muted);
 }
@@ -714,6 +888,49 @@
 .badge {
   width: 18px;
   height: 18px;
+}
+
+/* Yapp Chat's badges that shine (lib/ui.js shiny: the founders', the team's): a reflection crosses the picture from
+   its top left to its bottom right, a moment every few seconds. Not for those who asked their system for less
+   motion. The corners are the tile's (scripts/badges.mjs: 16 of 72). */
+.badge-shine {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  overflow: hidden;
+  vertical-align: middle;
+  border-radius: 22%;
+}
+
+.badge-shine > img {
+  display: block;
+}
+
+.badge-shine::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  /* A band of light on a sheet three times the picture's size, slid across it: no edge of the sheet ever shows. */
+  background: linear-gradient(135deg, transparent 43%, rgb(255 255 255 / 0.85) 50%, transparent 57%) 100% 100% / 300% 300%;
+  animation: badge-shine 4.5s ease-in-out infinite;
+  pointer-events: none; /* the picture under it has the tooltip */
+}
+
+@keyframes badge-shine {
+  0%,
+  78% {
+    background-position: 100% 100%;
+  }
+
+  100% {
+    background-position: 0% 0%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badge-shine::after {
+    animation: none;
+  }
 }
 
 .badge-pill {
@@ -1338,17 +1555,37 @@ img.tip-preview {
   height: 20px;
 }
 
-/* Slow mode countdown, at the end of the message box row. */
+/* The message box with what sits in it: the slow mode countdown (a clock and the seconds), at its end; what you
+   type stops short of it. */
+.input-box {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
 .cooldown {
-  align-self: center;
-  flex-shrink: 0;
-  padding: 2px 8px;
-  font-size: 11px;
+  position: absolute;
+  top: 0;
+  right: 10px;
+  bottom: 0;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  font-size: 12px;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
   color: var(--warn);
-  white-space: nowrap;
-  background: var(--warn-soft);
-  border-radius: 999px;
+  pointer-events: none; /* a click there is a click in the box */
+}
+
+.cooldown .icon {
+  width: 13px;
+  height: 13px;
+}
+
+.input-box:has(.cooldown:not([hidden])) .input {
+  padding-right: 58px;
 }
 
 .cooldown.nudge {
@@ -2139,7 +2376,7 @@ img.tip-preview {
   height: 28px;
 }
 
-.cs-pic .cs-avatar {
+.cs-pic .source-avatar {
   box-shadow: none;
 }
 
@@ -2223,28 +2460,42 @@ img.tip-preview {
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;
+  justify-content: center;
   gap: 7px;
+  min-width: 20px; /* one icon alone: a round tile, not a stub of a pill */
+  height: 20px;
   padding: 0 7px;
   font-size: 11px;
   font-weight: 600;
-  line-height: 18px;
   color: var(--warn);
   white-space: nowrap;
   background: var(--warn-soft);
   border-radius: 999px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--warn) 28%, transparent);
   font-variant-numeric: tabular-nums;
 }
 
 .mode {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   cursor: help; /* hover: what the mode means */
 }
 
 .mode .icon {
-  width: 11px;
-  height: 11px;
+  width: 12px;
+  height: 12px;
+}
+
+
+/* A mode that doesn't hold you back (lib/chat.js Feed.modePass): quiet. All of them: the pill too. */
+.mode.passed {
+  color: var(--muted);
+}
+
+.pane-modes.passed {
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--border);
 }
 
 /* The tooltip for a mode: what it means. */
@@ -2276,11 +2527,11 @@ img.tip-preview {
   opacity: 1;
 }
 
-/* Narrow panes (the side panel): keep the channel name readable (its own
-   width, up to half the header); the uptime and the modes' values go (hover a mode for it). */
+/* The channel's name in full while there's room (the rest keeps its width, the name gives way). Narrow panes (the
+   side panel) keep it readable: the uptime and the modes' values go (hover a mode for it). */
 .feed-chip .pane-title {
-  flex-shrink: 0;
-  max-width: 50%;
+  flex: 0 1 auto;
+  min-width: 3ch;
 }
 
 @container pane (max-width: 440px) {
@@ -2290,6 +2541,11 @@ img.tip-preview {
 
   .feed-chip .pane-modes {
     gap: 5px;
+  }
+
+  /* One mode, now an icon by itself: a round tile. */
+  .feed-chip .pane-modes:has(> .mode:only-child) {
+    padding: 0;
   }
 }
 
@@ -2483,6 +2739,7 @@ img.tip-preview {
   padding: 2px 4px;
   color: var(--muted);
   background: none;
+  box-shadow: none;
 }
 
 .mod-modes.quiet:hover {
@@ -2784,7 +3041,7 @@ img.tip-preview {
   display: grid;
   flex-shrink: 0;
   gap: 6px;
-  max-height: 45%;
+  max-height: 50%; /* two cards and a folded one, in a side panel */
   padding: 6px 8px;
   overflow-y: auto;
   border-bottom: 1px solid var(--border-subtle);
@@ -2834,9 +3091,88 @@ img.tip-preview {
   white-space: nowrap;
 }
 
+/* Folded to one line: the head says the rest (the question and what leads, what was pinned). */
+.pin-head {
+  cursor: pointer;
+}
+
+.pin-summary {
+  display: none;
+}
+
+.pin-card.folded {
+  padding-bottom: 6px;
+}
+
+.pin-card.folded > :not(.pin-head) {
+  display: none;
+}
+
+.pin-card.folded .pin-state {
+  flex: none;
+  max-width: 45%;
+}
+
+.pin-card.folded .pin-summary {
+  display: block;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A folded pinned message is the message itself, "name: what they said": the pin says it's pinned, by whom waits
+   for unfolding. Its emotes at the line's height. */
+.pin-card.pin.folded .pin-kind,
+.pin-card.pin.folded .pin-state {
+  display: none;
+}
+
+.pin-summary .emote {
+  height: 18px;
+  margin: -3px 0;
+}
+
+/* A narrow pane: a folded card's icon says what it is, the room is for what it says. */
+@container pane (max-width: 440px) {
+  .pin-card.folded .pin-kind {
+    display: none;
+  }
+}
+
+.pin-fold .icon {
+  transition: transform 0.15s;
+}
+
+.pin-card:not(.folded) .pin-fold .icon {
+  transform: rotate(180deg);
+}
+
+/* Who pinned a message: their badges and name as in the chat, at the head's size. */
+.pin-state .badges {
+  margin: 0 4px 0 2px;
+}
+
+.pin-state .badge {
+  width: 15px;
+  height: 15px;
+}
+
+.pin-state .badge-pill {
+  min-width: 14px;
+  height: 14px;
+  font-size: 9px;
+}
+
 .pin-head .btn {
   margin: -2px -4px -2px 0;
   padding: 3px;
+}
+
+.pin-head .pin-fold {
+  margin-right: -2px;
 }
 
 .pin-title {
@@ -2908,6 +3244,7 @@ img.tip-preview {
 .pin-message {
   max-height: 4.6em;
   overflow-y: auto;
+  overflow-wrap: anywhere; /* a long link */
   font-size: var(--chat-size);
   line-height: 1.5;
 }
@@ -3036,6 +3373,105 @@ img.tip-preview {
   text-align: right;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* ---- A badge or paint the service just gave you (ChatPane.showGiven): its picture, big (a paint: a tile of its
+   colours), what it is, and under that a button to wear it. A card as the ones above the chat, the accent's colour
+   behind the picture. ---- */
+
+.given-bar {
+  display: grid;
+  flex-shrink: 0;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 8px;
+  padding: 8px 8px 8px 10px;
+  font-size: 12px;
+  background: linear-gradient(100deg, color-mix(in srgb, var(--accent) 18%, var(--surface-2)), var(--surface-2) 70%);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border-subtle));
+  border-radius: var(--radius-sm);
+}
+
+.given-bar + .pane-pinned:not([hidden]) {
+  padding-top: 0;
+}
+
+/* Chats side by side: said once, in the first that shows. */
+.pane:not([hidden]) ~ .pane .given-bar {
+  display: none;
+}
+
+.given-art {
+  display: flex;
+}
+
+/* It lands with a little bounce, once. Several: each half over the one before. */
+.given-art > * {
+  width: 44px;
+  height: 44px;
+  filter: drop-shadow(0 2px 5px rgb(0 0 0 / 0.3));
+  animation: given-land 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+
+.given-art > * + * {
+  margin-left: -14px;
+}
+
+/* A paint: a tile as a badge's, in its colours (moving, if the paint does). */
+.given-paint {
+  display: grid;
+  place-items: center;
+  font-size: 19px;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
+  border-radius: 10px;
+}
+
+.given-paint.flowing {
+  background-size: 200% 100%;
+  animation:
+    given-land 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) both,
+    paint-flow 5s linear infinite;
+}
+
+@keyframes given-land {
+  from {
+    opacity: 0;
+    transform: scale(0.5) rotate(-12deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .given-art > *,
+  .given-paint.flowing {
+    animation: none;
+  }
+}
+
+.given-text {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.given-text strong {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.given-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  color: var(--muted);
+}
+
+.given-bar > .btn {
+  align-self: start;
+  padding: 3px;
 }
 
 /* ---- A streamer live on other platforms too (ChatPane.offerSimulcast): combine the chats? ---- */
@@ -3210,13 +3646,14 @@ img.tip-preview {
   vertical-align: middle;
 }
 
-/* Your name or the highlight word in it. */
+/* Your name or the highlight word in it: in the highlight's colour on its tint (no line under it: it ran through
+   a name's own underscores). */
 .mention-text mark {
-  padding: 0 2px;
-  color: inherit;
+  padding: 1px 3px;
+  font-weight: 600;
+  color: var(--warn);
   background: var(--warn-soft);
-  border-radius: 3px;
-  box-shadow: inset 0 -2px var(--warn);
+  border-radius: 4px;
 }
 
 /* Nothing yet: what it's waiting for (and signing in, if that's what it needs). */
@@ -3287,12 +3724,37 @@ img.tip-preview {
   vertical-align: -1px;
 }
 
-/* 7TV name paints: the gradient or image shows through the letters. */
-.name.painted {
+/* Name paints (7TV's, Yapp Chat's), in a chat line and on a user card: the gradient or image shows through the letters. */
+.name.painted,
+.card-name.painted,
+.given-text .painted {
   color: transparent !important;
   background-clip: text;
   -webkit-background-clip: text;
   background-size: cover;
+}
+
+/* A Yapp Chat paint that moves (lib/paints.js `flow`): its colours, which end where they begin, slide through the
+   name and come round again. Still for those who asked their system for less motion. */
+.name.painted.flowing,
+.card-name.painted.flowing,
+.given-text .painted.flowing {
+  background-size: 200% 100%;
+  animation: paint-flow 5s linear infinite;
+}
+
+@keyframes paint-flow {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .name.painted.flowing,
+  .card-name.painted.flowing,
+  .given-text .painted.flowing {
+    animation: none;
+  }
 }
 
 .unread-line {
@@ -3372,4 +3834,65 @@ img.tip-preview {
   flex-direction: column;
   gap: 2px;
   font-size: 13px;
+}
+
+/* Over a name (ChatPane.showNameTip): their picture (their initial until it's there), their name with its badges,
+   what their profile says, and under those when the message was sent and how much they've written. */
+.hover-tip[data-kind="name"] {
+  flex-direction: column;
+  gap: 4px;
+  max-width: min(320px, calc(100vw - 16px));
+  font-size: 13px;
+}
+
+.peek-head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.peek-photo {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--muted);
+  object-fit: cover;
+  background: var(--surface-3);
+  border-radius: 50%;
+}
+
+.peek-who {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.peek-name {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  font-size: 15px;
+}
+
+.peek-name .badges {
+  top: 0;
+}
+
+.peek-name .name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.peek-facts {
+  color: var(--text);
+}
+
+.peek-facts span {
+  white-space: nowrap;
 }

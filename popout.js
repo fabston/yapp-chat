@@ -5,7 +5,6 @@
  */
 
 import { ChatContext, ChatPane } from './lib/chat.js';
-import { isNotesKey, signInChanged } from './lib/settings.js';
 import { isSource, sourceLabel, uniqueSources } from './lib/sources.js';
 import { popOutUrl } from './lib/window.js';
 
@@ -37,9 +36,5 @@ if (!chat) {
   const message = new URLSearchParams(location.search).get('message');
   if (message) pane.reveal(message);
 
-  // Signing in or out changes the Twitch connection: start over. Other settings apply to new messages.
-  chrome.storage.onChanged.addListener(async (changes, area) => {
-    if (area === 'local' && (signInChanged(changes.twitchAuth) || signInChanged(changes.kickAuth))) return location.reload();
-    if (area === 'sync' && Object.keys(changes).some((k) => k !== 'splits' && !isNotesKey(k))) await ctx.reload();
-  });
+  ctx.followSettings();
 }

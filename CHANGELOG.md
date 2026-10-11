@@ -2,11 +2,72 @@
 
 What changed in each version of Yapp Chat, newest first. Get it from the [Chrome Web Store](https://chromewebstore.google.com/detail/yapp-chat/ocebmcgmildjdidagnnifoegheabnpgd).
 
+## 1.0.31
+- Founders have one paint of their own now, *Founder*: the crown's gold, with a gleam moving through the name.
+- The team has a paint of its own beside its badge, *Team*.
+- Settings lists the paints that aren't everyone's first, marked *Limited*.
+- Settings says which Discord account you linked ("Linked to *name*"). One linked earlier shows it after *Unlink* and linking again.
+- Settings, tidied:
+  - *Chat* is in three groups (opening a chat, in a chat, busy chats) and *Notifications* in two (going live, mentions).
+  - Clearer names: *Cosmetics* is now *Name paints and extra badges*, *Hold the chat anywhere under the pointer* is *Pause chat wherever the pointer is*, *Also collect highlight words in Mentions* is *Highlight words count as mentions*, and the moderators' *Keys* is *Keyboard shortcuts*.
+  - *Privacy & data* says what yapp.chat keeps (your accounts' public IDs, with your paint and badges), beside what your browser keeps.
+  - With *Name paints and extra badges* off, Settings no longer asks yapp.chat about your account when it opens, and offers no paint or badge to pick.
+- Safer, after a security review of the whole project:
+  - A reply can't be made to carry anything but your message: what comes from the earlier-messages service is checked before any of it goes back to Twitch.
+  - *Build a regex* writes patterns that no message can slow down. One built before with both *Letters stretched* and *Spam tricks* is worth building again (a long line of look-alike signs could hold the chat up).
+  - Your sign-ins are kept where only Yapp Chat's own pages can read them, not the small script that runs on Twitch, Kick and YouTube pages.
+  - What other services send (paint and badge styles, pictures' addresses, YouTube links typed or in a backup) is taken only as what it's meant to be.
+- A chat in a window you can't see keeps drawing (and noting your mentions) about once a second, in place of all at once when you come back.
+- In the mentions inbox, your name is marked by its colour on a tint, without the line under it (it ran into a name's own underscores), and with the @ before it when it was written with one.
+- Esc with a conversation open closes it without also jumping the chat to its newest message.
+- A change in the moderation panel or on the raid bar that Twitch refuses says so in the warning colour, like every other mod action.
+- Settings opens whole: no more sign-in buttons for a moment while you're signed in, nor your accounts and pictures fading or popping in and pushing the page down. Your Twitch picture is kept with your sign-in, so it's there at once.
+- Boost Yapp Chat's Discord server and you get a Booster badge and the Boost paint, for as long as your boost lasts: link your Discord account under Settings → *Accounts* (shown once it's switched on).
+
+## 1.0.30
+- Seasonal badges, starting with Halloween 2026: the duck as a ghost. Everyone signed in to Twitch or Kick with Yapp Chat between 1 October and 2 November gets it, to keep. When you've been given a badge (or a name paint: events can give those too), a card above the chat shows it with a *Wear it* button, and stays until you wear it or close it; change it from Settings → *Accounts*.
+- New badges, paints and events can now reach you without an update: Yapp Chat asks yapp.chat for the list about once a day (the same list for everyone; Settings → *Cosmetics* off stops it).
+- A Christmas 2026 badge is on its way too, the duck as a snowman: everyone signed in during December gets it.
+- Slow mode's countdown sits in the message box now, as a small clock and the seconds, in place of the "Slow mode · 4s" label beside it.
+- Point at a name for a quick look at who it is: their picture, their badges, followers and when they joined (on Kick how long they've subscribed and followed), with when the message was sent and how much they've written lately. Click for the full card, as before.
+- Big sub gifts and cheers stand out: "is gifting N subs" gets louder from 20, 50, 100 and 200 at once, and a cheer from 1,000, 5,000, 10,000 and 100,000 bits, with more colour, a bigger count and light crossing the line (still, if your system asks for less motion).
+- A sub gifted to you is no longer lost among many gifted at once: its line stays in the chat ("… gifted you a sub") and it's in your mentions inbox.
+- The name paints that move (Sunset, Aurora, Ember, Rainbow) are now the founders': for the first 420 accounts on Yapp Chat, like the Founder badge. The other paints stay free for everyone.
+- A Yapp Chat badge's tooltip names it once: "Halloween 2026" over "Yapp Chat badge", so the name isn't cut off.
+- A Team badge, the duck in a hard hat, for the people who make Yapp Chat.
+- The Founder and Team badges shine: a reflection crosses them every few seconds. (Not if your system asks for less motion.)
+- Settings → *Accounts* shows each account's ID under its name; click it to copy.
+
+## 1.0.29
+- Founders: the first 420 accounts on Yapp Chat get a Founder badge, the duck with a crown on a blue tile (drawn in bold shapes, to read at chat size), to wear before their name for everyone who uses Yapp Chat to see (in chat and on their user card). If you're one, Settings → *Accounts* offers it under your name paint. It's yours to keep, on or off.
+  - For this, signing in to Twitch or Kick now registers that account's public ID with yapp.chat (nothing else; Settings → *Cosmetics* off stops it). The privacy policy says more.
+- The sample subscriber badges in Settings' preview are redrawn in the same bold style, so they read at that size too.
+- A Yapp Chat button in Twitch's top bar, beside Twitch's own: click the duck to open the chat in the side panel. Settings → *Chat* → *Yapp Chat button on Twitch* turns it off.
+- The duck is redrawn for where it's small: the toolbar icon and the one at the top of the chat window, side panel and Settings are now a bolder duck that stays clear at that size. The big one hasn't changed.
+
+## 1.0.28
+- Name paints of your own, free: Settings → *Accounts* → *Name paint* puts colours through your Twitch or Kick name, and everyone who uses Yapp Chat sees them (no 7TV account needed). Twelve to choose from; Sunset, Aurora, Ember and Rainbow move through the name. Yours shows on your own screen at once and reaches others within ten minutes. *None* takes it off; Settings → *Cosmetics* hides paints.
+  - To show it to others, your account's public ID and the paint are kept on yapp.chat (nothing else). To show you theirs, a chat asks yapp.chat about the people chatting in it; that isn't kept. The privacy policy says more.
+- A user card shows the name in its paint too (Yapp Chat's or 7TV's), as the chat does.
+- Your name paint now shows on the messages you send on Twitch too (they were drawn without it, though others saw it). The same goes for your own 7TV paint and your 7TV, BetterTTV and FrankerFaceZ badges on your own messages.
+
+## 1.0.27
+- A chat mode that doesn't hold you back goes grey in the header, and hovering it says why ("You followed 3 months ago, so you can chat", "You're a subscriber", "You're a VIP here"); one that does stays orange. It's worked out when you open the chat and again when a mode comes on while you're in it. Signed in only; moderators see the modes as they are.
+- "Connecting…" and "Reconnecting…" in a chat's header are never cut off any more: a small spinner (a dot when something's wrong) with the words beside it, and in a narrow pane the spinner alone (hover it for the words).
+- A folded pinned message is the message itself ("name: what they said", with its emotes and links), with more room for it; unfold it for who pinned it. In a narrow pane a folded prediction or poll drops its label for the same reason.
+
+## 1.0.26
+- YouTube's pinned message shows above the chat too, like Twitch's and Kick's: who pinned it, with their badges, and what was said.
+- The cards above the chat (prediction, poll, pinned message) fold to one line that still says the gist ("Next game? · Chess 75%"): click a card's top or ⌄. With three at once, the pinned message starts folded, so none is cut off.
+- A YouTube chat opened from a video shows its channel's name even when YouTube's page doesn't give it (it showed the video's code).
+- A chat's header shows the channel's name in full while there's room (it was cut short even with space beside it).
+- A chat mode that's on by itself says its name in the header ("Followers-only 10m") in place of an icon alone; several keep their icons and values. In a narrow pane one mode is a small round tile. The pill has an outline now.
+
 ## 1.0.25
 - Predictions, polls and pinned messages, above the chat on Twitch and Kick, as on their own sites:
   - A prediction shows its outcomes with their share of the points, how many predicted each, and the time left to predict; then *Locked*, then its result with the winner marked.
   - A poll shows its choices with their votes and the time left; when it ends, the winner is marked.
-  - A pinned message shows as a line of the chat (emotes, the name opening their card) with who pinned it.
+  - A pinned message shows who pinned it, with their badges, and under it what was said (emotes and links as in the chat; with its sender's name when someone else's message was pinned).
   - They're to look at: voting and predicting stay on Twitch and Kick. ✕ puts one away; Settings → *Chat* → *Pinned messages, polls and predictions* turns them all off. In a combined chat each says whose it is.
 - The raid bar (in channels you moderate) is a card now, like those: the raid's icon, its viewers as a pill, and buttons with icons that tick off once done.
 

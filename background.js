@@ -4,11 +4,12 @@
 // on other pages. Everything else runs in the side panel and chat window.
 
 import { formatCount } from './lib/format.js';
-import { liveExceptWith, loadNotes, loadSettings, loadTwitchAuth, notifiesFor, saveNotes, saveSettings } from './lib/settings.js';
+import { liveExceptWith, loadKickAuth, loadNotes, loadSettings, loadTwitchAuth, notifiesFor, saveNotes, saveSettings } from './lib/settings.js';
 import { sourceFromUrl } from './lib/sources.js';
 import { popOutUrl } from './lib/window.js';
-import { kickLiveInfo } from './lib/kick.js';
-import { twitchFollowedLive, twitchLiveInfo } from './lib/twitch.js';
+import { freshKickAuth, kickLiveInfo } from './lib/kick.js';
+import { joinOnce, loadCatalog, refreshCatalog } from './lib/paints.js';
+import { freshTwitchAuth, twitchFollowedLive, twitchLiveInfo } from './lib/twitch.js';
 
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false }).catch((error) => console.error(error));
 // No panel for the whole window: only the tabs it's opened on get one.
@@ -16,6 +17,10 @@ chrome.sidePanel.setOptions({ enabled: false }).catch((error) => console.error(e
 
 // YouTube's web API (new chat messages, viewer count) refuses requests that
 // carry an extension's Origin. Drop the header from the ones Yapp Chat itself makes.
+// Sign-ins and everything else kept on this device are for the extension's own pages: not for the script that
+// runs in Twitch, Kick and YouTube pages (autoopen.js, which reads two synced switches and nothing here).
+chrome.storage.local.setAccessLevel?.({ accessLevel: 'TRUSTED_CONTEXTS' }).catch(() => {});
+
 chrome.declarativeNetRequest
   .updateSessionRules({
     removeRuleIds: [1],
@@ -55,6 +60,21 @@ chrome.storage.onChanged.addListener((changes, area) => {
 });
 chrome.runtime.onStartup.addListener(restoreUnread);
 chrome.runtime.onInstalled.addListener(restoreUnread);
+
+// Every sign-in joins Yapp Chat's members, once (lib/paints.js joinOnce: numbered as they come, the first 420 are
+// founders): when the browser starts, Yapp Chat updates, or you sign in. Not while Settings → Name paints and extra badges is off.
+// The events it knows are this version's and the service's catalogue's (fetched here too, about once a day): a
+// newer one may have an event that runs now, so a catalogue just kept joins again.
+async function joinMembers() {
+  if (!(await loadSettings()).cosmetics) return;
+  await loadCatalog();
+  refreshCatalog().catch(() => {});
+  joinOnce('twitch', await loadTwitchAuth(), freshTwitchAuth).catch(() => {}); // not now: again next time
+  joinOnce('kick', await loadKickAuth(), freshKickAuth).catch(() => {});
+}
+chrome.runtime.onStartup.addListener(joinMembers);
+chrome.runtime.onInstalled.addListener(joinMembers);
+chrome.storage.onChanged.addListener((changes, area) => area === 'local' && (changes.twitchAuth || changes.kickAuth || changes.cosmeticsCatalog) && joinMembers());
 
 // A new mention (Settings → Notifications): one notification, updated as more come ("3 new mentions"), not a stack.
 chrome.storage.onChanged.addListener(async (changes, area) => {

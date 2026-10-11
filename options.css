@@ -396,8 +396,8 @@ code {
   }
 }
 
-/* Signed in: your account fades in where the button was. */
-.account:not([hidden]) {
+/* Just signed in: your account fades in where the button was (not one that's there as the page opens). */
+.account.arriving:not([hidden]) {
   animation: account-in 0.35s ease-out;
 }
 
@@ -413,7 +413,7 @@ code {
     animation-duration: 2s;
   }
 
-  .account:not([hidden]) {
+  .account.arriving:not([hidden]) {
     animation: none;
   }
 }
@@ -468,10 +468,13 @@ code {
   border-radius: 999px;
 }
 
+/* Empty: one boxed line, as any other list's. */
 .item-list.chip-list li.none {
-  padding-left: 0;
+  flex: 1;
+  padding: 6px 12px;
+  font-weight: 400;
   background: none;
-  border: none;
+  border-radius: var(--radius-sm);
 }
 
 .chip-list .btn-icon {
@@ -749,6 +752,19 @@ code {
   margin-top: 14px;
 }
 
+/* The page shows once the script has drawn it as it is for you (options.js sets data-ready): as written in
+   options.html it has a sign-in button for an account that's signed in, no pictures, and every switch off. */
+:root:not([data-ready]) .settings {
+  visibility: hidden;
+  animation: settings-late 0s 2s forwards; /* a script that never got that far: the page shows anyway, as written */
+}
+
+@keyframes settings-late {
+  to {
+    visibility: visible;
+  }
+}
+
 /* Accounts: Twitch and Kick, each in a card of its own. */
 .account-card {
   margin-top: 12px;
@@ -786,6 +802,117 @@ code {
 .account-sub {
   font-size: 12px;
   color: var(--muted);
+}
+
+/* The account's ID after it: a click copies it. */
+.account-id {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  color: inherit;
+  cursor: pointer;
+}
+
+.account-id::before {
+  content: '·';
+  margin: 0 5px;
+}
+
+.account-id:hover,
+.account-id:focus-visible {
+  color: var(--text);
+}
+
+/* Your name's paint (options.js renderPaints): a dropdown of the paints in their own colours, and a line of chat
+   with yours on your name. */
+.paint-picker {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.paint-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.paint-row + .paint-row {
+  margin-top: 12px;
+}
+
+.paint-row .setting-text {
+  flex: 1;
+  min-width: 0;
+}
+
+/* A paint as a dropdown's choice; one that isn't everyone's says so after its name. */
+.paint-choice {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.paint-choice.limited::after {
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  content: 'Limited';
+  background: var(--accent-soft);
+  border-radius: 999px;
+}
+
+/* A badge with its name, as a dropdown's choice. */
+.badge-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.paint-preview > .badge,
+.paint-preview > .badge-shine {
+  margin-right: 5px;
+  vertical-align: -4px;
+}
+
+.paint-row .dropdown {
+  flex: none;
+  width: 160px;
+}
+
+/* A narrow page: the dropdown under its words, as wide as the card. */
+@media (max-width: 560px) {
+  .paint-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .paint-row .dropdown {
+    width: 100%;
+  }
+}
+
+.paint-preview {
+  margin-top: 10px;
+  padding: 7px 10px;
+  font-size: 14px;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+}
+
+/* A name here, and in the dropdown, is a sample, not a button. */
+.paint-picker .name,
+.dropdown-option .name {
+  text-decoration: none;
+  cursor: inherit;
 }
 
 .setting-row.static {

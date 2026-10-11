@@ -7,8 +7,8 @@
 import { channelSuggest } from './lib/channel-suggest.js';
 import { ChatContext, ChatPane } from './lib/chat.js';
 import { mentionsButton } from './lib/mentions.js';
-import { isNotesKey, loadSettings, saveSettings, signInChanged } from './lib/settings.js';
-import { chatFromInput, chatKey } from './lib/sources.js';
+import { loadSettings, saveSettings } from './lib/settings.js';
+import { chatFromInput, chatKey, SOURCE_HINT, sourceKey } from './lib/sources.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -66,7 +66,7 @@ $('addForm').addEventListener('submit', async (e) => {
   // One channel, or several ("xqc, @xqcyt") merged into one chat.
   const chat = chatFromInput(input.value);
   if (!chat) {
-    input.setCustomValidity('Enter a Twitch channel, kick:name, a YouTube @handle, or a Twitch/Kick/YouTube link (several: separate with commas).');
+    input.setCustomValidity(`${SOURCE_HINT} (several: separate with commas).`);
     input.reportValidity();
     return;
   }
@@ -82,7 +82,7 @@ $('settingsBtn').before(
   mentionsButton({
     ctx,
     onOpen: (source, id) => {
-      const shown = [...panes.values()].find((p) => p.chat.some((s) => chatKey([s]) === chatKey([source])));
+      const shown = [...panes.values()].find((p) => p.chat.some((s) => sourceKey(s) === sourceKey(source)));
       if (shown) return shown.reveal(id);
       revealing = { key: chatKey([source]), id };
       saveSplits((splits) => [...splits, [source]]);
@@ -90,11 +90,10 @@ $('settingsBtn').before(
   }),
 );
 
+ctx.followSettings();
+// The columns, as they're kept: changed here, or in another chat window.
 chrome.storage.onChanged.addListener(async (changes, area) => {
-  if (area === 'local' && (signInChanged(changes.twitchAuth) || signInChanged(changes.kickAuth))) return location.reload();
-  if (area !== 'sync') return;
-  if (changes.splits) reconcile((await loadSettings()).splits);
-  if (Object.keys(changes).some((k) => k !== 'splits' && !isNotesKey(k))) await ctx.reload();
+  if (area === 'sync' && changes.splits) reconcile((await loadSettings()).splits);
 });
 
 reconcile(ctx.settings.splits);

@@ -8,9 +8,8 @@
 import { ChatContext, ChatPane } from './lib/chat.js';
 import { channelSuggest } from './lib/channel-suggest.js';
 import { icon } from './lib/icons.js';
-import { chatFromInput, chatKey, sourceFromUrl } from './lib/sources.js';
+import { chatFromInput, chatKey, SOURCE_HINT, sourceFromUrl, sourceKey } from './lib/sources.js';
 import { mentionsButton } from './lib/mentions.js';
-import { isNotesKey, signInChanged } from './lib/settings.js';
 import { openChatWindow } from './lib/window.js';
 
 const $ = (id) => document.getElementById(id);
@@ -96,7 +95,7 @@ $('openForm').addEventListener('submit', (e) => {
   // One channel, or several ("xqc, @xqcyt") merged into one chat.
   const chat = chatFromInput($('openInput').value);
   if (!chat) {
-    $('openInput').setCustomValidity('Enter a Twitch channel, kick:name, a YouTube @handle, or a Twitch/Kick/YouTube link (several: separate with commas).');
+    $('openInput').setCustomValidity(`${SOURCE_HINT} (several: separate with commas).`);
     $('openInput').reportValidity();
     return;
   }
@@ -115,7 +114,7 @@ $('settingsBtn').before(
   mentionsButton({
     ctx,
     onOpen: (source, id) => {
-      pinned = [...panes.values()].find((p) => p.chat.some((s) => chatKey([s]) === chatKey([source])))?.chat || [source];
+      pinned = [...panes.values()].find((p) => p.chat.some((s) => sourceKey(s) === sourceKey(source)))?.chat || [source];
       renderMode();
       show(pinned);
       pane.reveal(id);
@@ -123,11 +122,6 @@ $('settingsBtn').before(
   }),
 );
 
-// Signing in or out changes the Twitch connection: start over. Other settings
-// apply to new messages.
-chrome.storage.onChanged.addListener(async (changes, area) => {
-  if (area === 'local' && (signInChanged(changes.twitchAuth) || signInChanged(changes.kickAuth))) return location.reload();
-  if (area === 'sync' && Object.keys(changes).some((k) => k !== 'splits' && !isNotesKey(k))) await ctx.reload();
-});
+ctx.followSettings();
 
 followTab();
