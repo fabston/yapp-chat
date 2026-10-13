@@ -549,6 +549,68 @@ button.setting-row:hover {
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
+/*
+ * What's wrong with what was typed, under its box (lib/ui.js fieldNote), in place of the browser's own bubble: a
+ * panel like the lists and menus, with the warning's colour on its edge, its icon and the box.
+ */
+.input[aria-invalid="true"] {
+  border-color: var(--warn);
+  box-shadow: 0 0 0 3px var(--warn-soft);
+}
+
+.field-note {
+  position: fixed;
+  z-index: 39; /* under a list of suggestions, should one open */
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 8px 12px 8px 10px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--text);
+  pointer-events: none;
+  background: var(--surface-2);
+  border: 1px solid var(--warn-line);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 32px var(--shadow);
+  animation: field-note-in 0.14s ease-out;
+}
+
+.field-note .icon {
+  width: 15px;
+  height: 15px;
+  margin-top: 1px;
+  color: var(--warn);
+}
+
+.field-note-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.field-note-text strong {
+  font-weight: 600;
+}
+
+.field-note-text span {
+  color: var(--muted);
+}
+
+@keyframes field-note-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .field-note {
+    animation: none;
+  }
+}
+
 /* Yellow on white is faint (about 1.4:1): a dark-gold edge so "on" still stands out in the light theme. */
 :root[data-theme="light"] .switch[aria-checked="true"],
 :root[data-theme="light"] [aria-checked="true"] > .switch {

@@ -2,6 +2,12 @@
 
 What changed in each version of Yapp Chat, newest first. Get it from the [Chrome Web Store](https://chromewebstore.google.com/detail/yapp-chat/ocebmcgmildjdidagnnifoegheabnpgd).
 
+## 1.0.33
+- A message that was answered now shows it: a small thread mark at its end with the number of replies. Point at it for a preview, click it for the whole thread, the same one a reply's quote opens. So when you read back you see which messages got answers without finding the replies first.
+
+## 1.0.32
+- Kick chat is live again. Kick changed where its chat connects on 12 October, and chats fell back to fetching new messages every few seconds, without deletions, bans or subs ("Kick's live chat connection isn't available"). Yapp Chat now asks Kick where to connect, so a change like that one no longer needs an update.
+
 ## 1.0.31
 - Founders have one paint of their own now, *Founder*: the crown's gold, with a gleam moving through the name.
 - The team has a paint of its own beside its badge, *Team*.
@@ -12,13 +18,19 @@ What changed in each version of Yapp Chat, newest first. Get it from the [Chrome
   - Clearer names: *Cosmetics* is now *Name paints and extra badges*, *Hold the chat anywhere under the pointer* is *Pause chat wherever the pointer is*, *Also collect highlight words in Mentions* is *Highlight words count as mentions*, and the moderators' *Keys* is *Keyboard shortcuts*.
   - *Privacy & data* says what yapp.chat keeps (your accounts' public IDs, with your paint and badges), beside what your browser keeps.
   - With *Name paints and extra badges* off, Settings no longer asks yapp.chat about your account when it opens, and offers no paint or badge to pick.
+- Hype trains above the chat on Twitch, with the cards for predictions, polls and pins: the level, how far along it is, and the time left to reach the next.
+- A running poll or prediction has a button, *Vote on Twitch* or *Predict on Kick*, that opens that site's own chat in a small window, where it's one click. (Neither lets another app vote for you.)
+- Settings → *Chat*: *Pinned messages, polls and predictions* is now *Polls, predictions, hype trains and pins*, and turns the new cards off with the rest.
+- Typing something that isn't a channel where you add a chat now gets a short note under the box, in Yapp Chat's own look and both themes, in place of the browser's warning bubble.
 - Safer, after a security review of the whole project:
+  - Your sign-in is no longer sent along when your name paint or badge is looked up or set. With each sign-in comes a small pass that says which account it is and can do nothing else; that's what goes to Yapp Chat's own service now.
   - A reply can't be made to carry anything but your message: what comes from the earlier-messages service is checked before any of it goes back to Twitch.
   - *Build a regex* writes patterns that no message can slow down. One built before with both *Letters stretched* and *Spam tricks* is worth building again (a long line of look-alike signs could hold the chat up).
   - Your sign-ins are kept where only Yapp Chat's own pages can read them, not the small script that runs on Twitch, Kick and YouTube pages.
   - What other services send (paint and badge styles, pictures' addresses, YouTube links typed or in a backup) is taken only as what it's meant to be.
 - A chat in a window you can't see keeps drawing (and noting your mentions) about once a second, in place of all at once when you come back.
 - In the mentions inbox, your name is marked by its colour on a tint, without the line under it (it ran into a name's own underscores), and with the @ before it when it was written with one.
+- A badge, a tag or an emote says what it is when you point at it in the user card, a conversation and the cards above the chat too, as it does in the chat (with the same "?" pointer).
 - Esc with a conversation open closes it without also jumping the chat to its newest message.
 - A change in the moderation panel or on the raid bar that Twitch refuses says so in the warning colour, like every other mod action.
 - Settings opens whole: no more sign-in buttons for a moment while you're signed in, nor your accounts and pictures fading or popping in and pushing the page down. Your Twitch picture is kept with your sign-in, so it's there at once.

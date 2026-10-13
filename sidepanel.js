@@ -8,8 +8,9 @@
 import { ChatContext, ChatPane } from './lib/chat.js';
 import { channelSuggest } from './lib/channel-suggest.js';
 import { icon } from './lib/icons.js';
-import { chatFromInput, chatKey, SOURCE_HINT, sourceFromUrl, sourceKey } from './lib/sources.js';
+import { chatFromInput, chatKey, SOURCE_ERROR, SOURCE_HINT, sourceFromUrl, sourceKey } from './lib/sources.js';
 import { mentionsButton } from './lib/mentions.js';
+import { fieldNote } from './lib/ui.js';
 import { openChatWindow } from './lib/window.js';
 
 const $ = (id) => document.getElementById(id);
@@ -94,17 +95,12 @@ $('openForm').addEventListener('submit', (e) => {
   e.preventDefault();
   // One channel, or several ("xqc, @xqcyt") merged into one chat.
   const chat = chatFromInput($('openInput').value);
-  if (!chat) {
-    $('openInput').setCustomValidity(`${SOURCE_HINT} (several: separate with commas).`);
-    $('openInput').reportValidity();
-    return;
-  }
+  if (!chat) return fieldNote($('openInput'), SOURCE_ERROR, SOURCE_HINT);
   $('openInput').value = '';
   pinned = chat;
   renderMode();
   show(chat);
 });
-$('openInput').addEventListener('input', () => $('openInput').setCustomValidity(''));
 channelSuggest($('openInput'), ctx);
 
 $('windowBtn').addEventListener('click', () => openChatWindow(pinned || pane?.chat));

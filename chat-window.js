@@ -8,7 +8,8 @@ import { channelSuggest } from './lib/channel-suggest.js';
 import { ChatContext, ChatPane } from './lib/chat.js';
 import { mentionsButton } from './lib/mentions.js';
 import { loadSettings, saveSettings } from './lib/settings.js';
-import { chatFromInput, chatKey, SOURCE_HINT, sourceKey } from './lib/sources.js';
+import { chatFromInput, chatKey, SOURCE_ERROR, SOURCE_HINT, sourceKey } from './lib/sources.js';
+import { fieldNote } from './lib/ui.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -65,15 +66,10 @@ $('addForm').addEventListener('submit', async (e) => {
   const input = $('addInput');
   // One channel, or several ("xqc, @xqcyt") merged into one chat.
   const chat = chatFromInput(input.value);
-  if (!chat) {
-    input.setCustomValidity(`${SOURCE_HINT} (several: separate with commas).`);
-    input.reportValidity();
-    return;
-  }
+  if (!chat) return fieldNote(input, SOURCE_ERROR, SOURCE_HINT);
   await saveSplits((splits) => (splits.some((c) => chatKey(c) === chatKey(chat)) ? splits : [...splits, chat]));
   input.value = '';
 });
-$('addInput').addEventListener('input', () => $('addInput').setCustomValidity(''));
 channelSuggest($('addInput'), ctx);
 $('settingsBtn').addEventListener('click', () => chrome.runtime.openOptionsPage());
 // Mentions inbox: a mention goes to its message, in a column with its channel (alone or merged), else in a new one.

@@ -1037,6 +1037,37 @@
   vertical-align: middle;
 }
 
+/* A message that was answered (lib/chat.js threadMark): how many replies, and a click for the conversation. */
+.thread-mark {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+  margin-left: 6px;
+  padding: 0 6px;
+  font-family: inherit;
+  font-size: 0.75em;
+  font-weight: 700;
+  line-height: inherit;
+  color: var(--muted);
+  vertical-align: 1px;
+  cursor: pointer;
+  user-select: none; /* not part of what's said: selecting chat text leaves the number out */
+  background: var(--surface-3);
+  border: 1px solid transparent;
+  border-radius: 999px;
+}
+
+.thread-mark .icon {
+  width: 1.15em;
+  height: 1.15em;
+}
+
+.thread-mark:hover,
+.thread-mark:focus-visible {
+  color: var(--accent);
+  border-color: var(--accent-line);
+}
+
 /* The message a reply answers, while you point at the reply. */
 .msg.replied {
   background: var(--accent-soft);
@@ -1218,8 +1249,10 @@ img.tip-preview {
   white-space: nowrap;
 }
 
-/* What only shows something on hover (no click): the "?" cursor says so. Names, links and replies keep the hand. */
-.pane-list :is(.emote-stack, .badge, .badge-pill, .msg-source, .fold-count, .ts) {
+/* What only shows something on hover (no click): the "?" cursor says so. Names, links and replies keep the hand.
+   Outside the list too (the user card, a conversation, the cards above the chat): what has a tooltip there. */
+.pane-list :is(.emote-stack, .badge, .badge-pill, .msg-source, .fold-count, .ts),
+.pane :is([data-tip], .emote-stack) {
   cursor: help;
 }
 
@@ -3133,6 +3166,34 @@ img.tip-preview {
 .pin-summary .emote {
   height: 18px;
   margin: -3px 0;
+}
+
+/* A hype train in its own warm colour (the level's bar too). */
+.pin-card.hype {
+  border-color: color-mix(in srgb, var(--warn) 45%, var(--border-subtle));
+}
+
+.pin-card.hype .pin-head > .icon,
+.pin-card.hype .pin-kind {
+  color: var(--warn);
+}
+
+.pin-card.hype .pin-bar {
+  --fill: color-mix(in srgb, var(--warn) 32%, transparent);
+}
+
+/* "Vote on Twitch": under a running poll or prediction, where the vote is made. */
+.pin-go {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  justify-self: start;
+  padding: 2px 0 0;
+}
+
+.pin-go .icon {
+  width: 12px;
+  height: 12px;
 }
 
 /* A narrow pane: a folded card's icon says what it is, the room is for what it says. */

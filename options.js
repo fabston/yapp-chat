@@ -4,6 +4,7 @@
  */
 
 import { icon } from './lib/icons.js';
+import { memberPass } from './lib/tokens.js';
 import { backupText, CHAT_FONTS, cleanLogin, clearNotes, COMMON_BOTS, DEFAULTS, EMOTE_SIZES, FONT_SIZES, isNotesKey, LIMITS, liveExceptWith, loadKickAuth, loadNotes, loadSettings, loadTwitchAuth, notifiesFor, readBackup, saveKickAuth, saveNotes, saveSettings, saveTwitchAuth } from './lib/settings.js';
 import { freshKickAuth, kickPicture, kickSignIn, kickSignOut } from './lib/kick.js';
 import { entryRegex, formatDuration, patternFor, readableColor } from './lib/format.js';
@@ -261,8 +262,8 @@ function renderPaints() {
     // it says is kept (and drawn, where it's news).
     if (askedMine[platform] !== account.userId) {
       askedMine[platform] = account.userId;
-      fresh(account)
-        .then(() => joinCosmetics(platform, account.userId, account.token))
+      memberPass(account, fresh)
+        .then((pass) => joinCosmetics(platform, account.userId, pass))
         .catch(() => {}); // not now: what's kept still shows
     }
     const me = { ...cosmeticsMine[key], ...picking[key] };
@@ -283,8 +284,7 @@ function renderPaints() {
       picking[key] = { ...picking[key], [kind]: value };
       renderPaints(); // it shows before it's saved
       try {
-        await fresh(account);
-        await saveCosmetic(platform, account.userId, account.token, kind, value);
+        await saveCosmetic(platform, account.userId, await memberPass(account, fresh), kind, value);
         say(value ? `Your ${kind} is set. Others see it within ten minutes.` : `Your ${kind} is off.`);
       } catch (error) {
         say(error.message, false);
@@ -327,8 +327,7 @@ function renderPaints() {
       const linker = button('btn btn-sm', me.discord ? 'Unlink' : 'Link Discord', async () => {
         linker.disabled = true;
         try {
-          await fresh(account);
-          const you = await linkDiscord(platform, account.userId, account.token, me.discord ? '' : await discordSignIn());
+          const you = await linkDiscord(platform, account.userId, await memberPass(account, fresh), me.discord ? '' : await discordSignIn());
           say(!you.discord ? 'Discord unlinked.' : you.boosting ? 'Discord linked. Thanks for boosting: the Booster badge and the Boost paint are yours.' : 'Discord linked. Boost the server to get the badge and paint.');
         } catch (error) {
           say(cancelled(error) ? 'Sign-in cancelled.' : error.message, cancelled(error));
